@@ -145,15 +145,15 @@
   <div id="app" style="display:none">
 
     <div class="tabs">
-      <button class="tab on" data-page="order">Order</button>
-      <button class="tab" data-page="expense">Expense</button>
-      <button class="tab" data-page="contact">Contact</button>
-      <button class="tab" data-page="orders">Orders</button>
+      <button class="tab on" data-page="dash">Dashboard</button>
+      <button class="tab" data-page="order">New Order</button>
+      <button class="tab" data-page="orders">Current Orders</button>
+      <button class="tab" data-page="contact">Contacts</button>
+      <button class="tab" data-page="expense">Expenses</button>
       <button class="tab" data-page="product">Products</button>
-      <button class="tab" data-page="dash">Dashboard</button>
     </div>
 
-    <div class="page on" id="page-order">
+    <div class="page" id="page-order">
 
     <div class="card">
       <h2>Order</h2>
@@ -301,7 +301,7 @@
       </div>
     </div>
 
-    <div class="page" id="page-dash">
+    <div class="page on" id="page-dash">
       <div class="card">
         <h2>Overview</h2>
         <div class="stats" id="stats"></div>
@@ -419,6 +419,7 @@ function start(){
   const sel = document.getElementById('seller');
   sel.innerHTML = DATA.sellers.map(s => `<option>${s}</option>`).join('');
   addItem();
+  loadDash();
   ['postage','discount','shipping','depositAmount'].forEach(id =>
     document.getElementById(id).addEventListener('input', refresh));
 }
