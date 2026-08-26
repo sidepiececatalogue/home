@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Side Piece Admin</title>
+<title>Side Piece Admin preview</title>
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -128,11 +128,11 @@
 </head>
 <body>
 
-<div class="bar"><h1>Side Piece Admin</h1></div>
+<div class="bar"><h1>Side Piece Admin</h1></div>\n<div style="background:#F4EBDF;text-align:center;padding:8px;font-size:11px;letter-spacing:.1em;color:#97836F">PREVIEW ONLY. Sample data, nothing saves.</div>
 
 <div class="wrap">
 
-  <div class="card" id="lock">
+  <div class="card" id="lock" style="display:none">
     <h2>Sign in</h2>
     <div class="field">
       <label>Password</label>
@@ -142,7 +142,7 @@
     <div class="msg" id="lockMsg"></div>
   </div>
 
-  <div id="app" style="display:none">
+  <div id="app">
 
     <div class="tabs">
       <button class="tab on" data-page="dash">Dashboard</button>
@@ -150,7 +150,6 @@
       <button class="tab" data-page="orders">Current Orders</button>
       <button class="tab" data-page="contact">Contacts</button>
       <button class="tab" data-page="expense">Expenses</button>
-      <button class="tab" data-page="product">Products</button>
     </div>
 
     <div class="page" id="page-order">
@@ -272,35 +271,6 @@
       </div>
     </div>
 
-    <div class="page" id="page-product">
-      <div class="card">
-        <h2>Add or edit a product</h2>
-        <div class="field">
-          <label>Find an existing product to edit</label>
-          <input type="text" id="pSearch" placeholder="Type a name" autocomplete="off">
-          <div class="results" id="pResults"></div>
-        </div>
-        <div class="field"><label>Name</label><input type="text" id="pName" placeholder="Gucci Marmont Mini Bag"></div>
-        <div class="field"><label>Category</label><select id="pCat"></select></div>
-        <div class="row field">
-          <div class="money"><label>Transfer price</label><div class="wrap"><span class="sign">$</span>
-            <input type="number" id="pTransfer" step="0.01" placeholder="0"></div></div>
-          <div class="money"><label>Base price</label><div class="wrap"><span class="sign">$</span>
-            <input type="number" id="pBase" step="0.01" placeholder="0"></div></div>
-        </div>
-        <div class="row field">
-          <div class="money"><label>Cost price</label><div class="wrap"><span class="sign">$</span>
-            <input type="number" id="pCost" step="0.01" placeholder="0"></div></div>
-          <div><label>Show in catalogue</label>
-            <select id="pShow"><option>Yes</option><option>No</option></select></div>
-        </div>
-        <div class="field"><label>Image link</label><input type="text" id="pImage" placeholder="https://..."></div>
-        <button class="btn dark" id="saveProduct">Save product</button>
-        <div class="msg" id="productMsg"></div>
-        <div class="hint">Cost price is what makes profit correct. Fill it in as you go.</div>
-      </div>
-    </div>
-
     <div class="page on" id="page-dash">
       <div class="card">
         <h2>Overview</h2>
@@ -412,8 +382,6 @@ function start(){
     (DATA.expenseCats || []).map(c => `<option>${c}</option>`).join('');
   document.getElementById('ePaid').innerHTML =
     DATA.sellers.map(s => `<option>${s}</option>`).join('');
-  document.getElementById('pCat').innerHTML =
-    [...new Set(DATA.products.map(p => p.category))].sort().map(c => `<option>${c}</option>`).join('');
   document.getElementById('cState').innerHTML =
     (DATA.states || []).map(s => `<option>${s}</option>`).join('');
   const sel = document.getElementById('seller');
@@ -737,96 +705,6 @@ document.getElementById('sDelete').addEventListener('click', async (ev) => {
   ev.target.disabled = false;
 });
 
-/* ---------- products ---------- */
-const pSearch = document.getElementById('pSearch');
-const pResults = document.getElementById('pResults');
-pSearch.addEventListener('input', () => {
-  const q = pSearch.value.trim().toLowerCase();
-  if(!q){ pResults.classList.remove('open'); return; }
-  const list = DATA.products.filter(p => p.name.toLowerCase().includes(q)).slice(0, 25);
-  pResults.innerHTML = list.length
-    ? list.map((p,i) => `<div class="res" data-i="${i}"><small>${p.category}</small>${p.name}</div>`).join('')
-    : '<div class="res" style="color:#97836F">Nothing matches</div>';
-  pResults.classList.add('open');
-  [...pResults.querySelectorAll('.res[data-i]')].forEach(el => {
-    el.addEventListener('mousedown', async (ev) => {
-      ev.preventDefault();
-      const p = list[Number(el.dataset.i)];
-      pResults.classList.remove('open');
-      pSearch.value = '';
-      const r = await call({ action: 'product', name: p.name }).catch(() => ({ ok:false }));
-      if(!r.ok) return msg('productMsg', 'Could not load that product', false);
-      const d = r.product;
-      document.getElementById('pName').value = d.name;
-      document.getElementById('pCat').value = d.category;
-      document.getElementById('pTransfer').value = d.transfer || '';
-      document.getElementById('pBase').value = d.base || '';
-      document.getElementById('pCost').value = d.cost || '';
-      document.getElementById('pImage').value = d.image || '';
-      document.getElementById('pShow').value = d.show || 'Yes';
-      msg('productMsg', 'Loaded. Edit and save.', true);
-    });
-  });
-});
-
-document.getElementById('saveProduct').addEventListener('click', async (ev) => {
-  const name = document.getElementById('pName').value.trim();
-  if(!name) return msg('productMsg', 'Add a name', false);
-  ev.target.disabled = true;
-  msg('productMsg', 'Saving...', true);
-  const val = id => document.getElementById(id).value;
-  const r = await call({
-    action: 'saveProduct', name: name, category: val('pCat'),
-    transfer: val('pTransfer'), base: val('pBase'), cost: val('pCost'),
-    image: val('pImage'), show: val('pShow'),
-  }).catch(e => ({ ok:false, error: e.message || 'Could not reach the sheet' }));
-  if(r.ok){
-    msg('productMsg', 'Saved to the Products tab.', true);
-    if(!DATA.products.some(p => p.name === name)) DATA.products.push({ name: name, category: val('pCat') });
-  } else msg('productMsg', r.error || 'Failed', false);
-  ev.target.disabled = false;
-});
-
-/* ---------- customer picker ---------- */
-const custInput = document.getElementById('customer');
-const custResults = document.getElementById('custResults');
-const custClear = document.getElementById('custClear');
-
-function drawCustomers(){
-  const q = custInput.value.trim().toLowerCase();
-  const words = q.split(/\s+/).filter(Boolean);
-  const list = (DATA.customers || [])
-    .filter(c => !words.length || words.every(w => c.toLowerCase().includes(w)))
-    .slice(0, 40);
-
-  const exact = (DATA.customers || []).some(c => c.toLowerCase() === q);
-  document.getElementById('custHint').textContent =
-    (q && !exact) ? 'New customer. Saving the order adds them to your list.' : '';
-
-  custResults.innerHTML = list.length
-    ? list.map((c, i) => `<div class="res" data-i="${i}">${c}</div>`).join('')
-    : '<div class="res" style="color:#97836F">No match. It will be saved as a new customer.</div>';
-  custResults.classList.add('open');
-  [...custResults.querySelectorAll('.res[data-i]')].forEach(el => {
-    el.addEventListener('mousedown', ev => {
-      ev.preventDefault();
-      custInput.value = list[Number(el.dataset.i)];
-      custResults.classList.remove('open');
-      custClear.style.display = 'block';
-      document.getElementById('custHint').textContent = '';
-    });
-  });
-}
-custInput.addEventListener('focus', drawCustomers);
-custInput.addEventListener('input', () => {
-  custClear.style.display = custInput.value ? 'block' : 'none';
-  drawCustomers();
-});
-custInput.addEventListener('blur', () => setTimeout(() => custResults.classList.remove('open'), 150));
-custClear.addEventListener('click', () => {
-  custInput.value = ''; custClear.style.display = 'none'; drawCustomers(); custInput.focus();
-});
-
 /* ---------- deposit toggle ---------- */
 document.querySelectorAll('#depChips .chip').forEach(c => {
   c.addEventListener('click', () => {
@@ -954,14 +832,77 @@ document.getElementById('refreshDash').addEventListener('click', () => {
   window.__freshDash = true; loadDash().then(() => window.__freshDash = false);
 });
 
-// remember the password so Face ID unlocking is enough
-try{
-  const saved = localStorage.getItem('sp-pw');
-  if(saved){
-    document.getElementById('pw').value = saved;
-    setTimeout(() => document.getElementById('unlock').click(), 150);
+
+/* ---------- PREVIEW. Sample data, nothing saves. ---------- */
+const seed = [
+ ['YSL Brown Clafskin Leather LouLou','Bags'],['Chanel Mini Kelly Bag Black','Bags'],
+ ['Chanel Mini Kelly Bag Baby Pink','Bags'],['Prada Rattan Camera Bag','Bags'],
+ ['Prada Shoulder Bag','Bags'],['Gucci Marmont Beige Mini Bag','Bags'],
+ ['Gucci Ophidia Pouch','Bags'],['LV Neverfull Black Bag MM','Bags'],
+ ['LV Onthego MM Bag','Bags'],['Dior Saddle Black Bag','Bags'],
+ ['Hermes Birkin Tan x Gold Bag','Bags'],['Loewe Puzzle Mint Green Bag','Bags'],
+ ['Miu Miu Aventure Bag Oak','Bags'],
+ ['Prada Symbole Black Sunglasses','Sunglasses'],['Celine CL40194 Black Sunglasses','Sunglasses'],
+ ['Miu Miu MU11W Black Sunglasses','Sunglasses'],['Gucci GG1674SK Sunglasses','Sunglasses'],
+ ['Hermes Oran Slides Sandals Black Footwear','Shoes'],['Chanel Ballet Flats Black Footwear','Shoes'],
+ ['Golden Goose White x Gold x Silver Sneaker','Shoes'],['Valentino Rockstud Sandal Nude Slides','Shoes'],
+ ['LV Card Holder Recto Verso M69431','Wallets/Cardholders'],['Prada Saffiano Wallet Cardholder Black','Wallets/Cardholders'],
+ ['Goyard Richelieu Wallet Black','Wallets/Cardholders'],
+ ['Celine Belt Brown Tan','Belts'],['Gucci GG Belt Black','Belts'],['YSL Belt','Belts'],
+ ['Cartier Trinity Earring','Jewellery'],['Van Cleef Accessories Bracelet','Jewellery'],
+ ['LV Petit Louis Necklace M00368','Jewellery'],['Dior Petit CD Bracelet','Jewellery'],
+ ['Celine Triomphe Raffia Straw Hat','Hats'],['Gucci Cap Hat','Hats'],
+ ['Gucci White Tee Unisex Clothing',"Men's"],['Essentials Hoodie Unisex Clothing',"Men's"],
+];
+DATA = {
+  sellers:['B','L'],
+  customers:['Sample Customer One','Sample Customer Two','Sample Customer Three',
+             'Another Example Name','Test Buyer Four'],
+  products: seed.map(s => ({ name:s[0], category:s[1] })),
+  expenseCats:['Subscriptions','Marketing','Packaging','Postage','Stock',
+               'Phone and Internet','Printing','Fees','Equipment','Other'],
+  states:['QLD','NSW','VIC','SA','WA','TAS','NT','ACT'],
+};
+const fakeOrders = [
+  { key:'SP1', id:'SP240001', row:2, date:'2026-08-24', seller:'B', customer:'Sample Customer Two',
+    items:[{row:2,category:'Bags',name:'Dior Saddle Black Bag',qty:1,price:220,total:220},
+           {row:3,category:'Belts',name:'Gucci GG Belt Black',qty:2,price:200,total:400}],
+    discount:10, postage:15, shipping:20, collected:625, split:170, supplierTotal:280,
+    deposit:100, depositDate:'2026-08-24', finalPaid:0, finalDate:'', owing:180, profit:270,
+    status:'Ordered', notes:'Client wants it gift wrapped' },
+  { key:'SP2', id:'SP240002', row:4, date:'2026-08-23', seller:'B', customer:'Sample Customer One',
+    items:[{row:4,category:'Bags',name:'YSL Brown Clafskin Leather LouLou',qty:1,price:440,total:440}],
+    discount:0, postage:15, shipping:0, collected:455, split:102.21, supplierTotal:287.79,
+    deposit:360, depositDate:'2026-08-23', finalPaid:0, finalDate:'', owing:0, profit:152.21,
+    status:'Shipped', notes:'' },
+  { key:'SP3', id:'SP240003', row:5, date:'2026-08-21', seller:'L', customer:'Test Buyer Four',
+    items:[{row:5,category:'Jewellery',name:'Cartier Trinity Earring',qty:1,price:200,total:200}],
+    discount:0, postage:15, shipping:5, collected:215, split:60, supplierTotal:105,
+    deposit:105, depositDate:'2026-08-21', finalPaid:0, finalDate:'', owing:0, profit:110,
+    status:'Delivered', notes:'' },
+];
+call = async function (payload) {
+  await new Promise(r => setTimeout(r, 300));
+  if (payload.action === 'orders') return { ok:true, orders: fakeOrders };
+  if (payload.action === 'dashboard') {
+    return { ok:true, data:{
+      orders:3, items:5, collected:1780, paid:900, owing:310, profit:585,
+      discounts:40, expenses:145,
+      sellers:{ 'B':{items:4,collected:1340,profit:455}, 'L':{items:1,collected:440,profit:130} },
+      recent:[
+        {date:'24 Aug', customer:'Sample Customer Two', collected:625, owing:180, status:'Ordered'},
+        {date:'23 Aug', customer:'Sample Customer One', collected:715, owing:130, status:'Shipped'},
+        {date:'21 Aug', customer:'Test Buyer Four', collected:440, owing:0, status:'Delivered'},
+      ],
+      top:[{name:'YSL Brown Clafskin Leather LouLou',qty:2},{name:'Dior Saddle Black Bag',qty:2},
+           {name:'Gucci GG Belt Black',qty:1}],
+    }};
   }
-}catch(e){}
+  if (payload.action === 'addOrder') return { ok:true, row:2, added:(payload.items||[]).length, orderId:'SP260824' };
+  return { ok:true };
+};
+start();
+
 
 // Enter goes straight to unlock
 document.getElementById('pw').addEventListener('keydown', e => {
