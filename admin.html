@@ -43,13 +43,15 @@
   .summary div{display:flex;justify-content:space-between;padding:2px 0}
   .summary .tot{border-top:1px solid var(--line);margin-top:6px;padding-top:7px;font-weight:600}
   .hint{font-size:11px;color:var(--muted);margin-top:8px}
+  .money{position:relative}
+  .money input{padding-left:24px}
+  .money .sign{position:absolute;left:11px;top:31px;color:var(--muted);font-size:14px;pointer-events:none}
   .pick{position:relative}
   .pick input{padding-right:30px}
   .clear{position:absolute;right:8px;top:29px;border:none;background:transparent;
     color:var(--muted);cursor:pointer;font-size:14px;display:none}
-  .results{position:absolute;left:0;right:0;top:100%;z-index:20;background:var(--white);
-    border:1px solid var(--line);border-radius:12px;margin-top:4px;max-height:230px;
-    overflow-y:auto;box-shadow:0 10px 26px rgba(59,47,35,.14);display:none}
+  .results{background:var(--white);border:1px solid var(--line);border-radius:12px;
+    margin-top:8px;max-height:250px;overflow-y:auto;display:none}
   .results.open{display:block}
   .res{padding:9px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--line)}
   .res:last-child{border-bottom:none}
@@ -138,12 +140,12 @@
     <div class="card">
       <h2>Money</h2>
       <div class="row field">
-        <div><label>Postage charged</label><input type="number" id="postage" value="15" step="0.01"></div>
-        <div><label>Discount</label><input type="number" id="discount" placeholder="0" step="0.01"></div>
+        <div class="money"><label>Postage charged</label><span class="sign">$</span><input type="number" id="postage" value="15" step="0.01"></div>
+        <div class="money"><label>Discount</label><span class="sign">$</span><input type="number" id="discount" placeholder="0" step="0.01"></div>
       </div>
       <div class="row field">
-        <div><label>Supplier shipping</label><input type="number" id="shipping" placeholder="0" step="0.01"></div>
-        <div><label>Deposit paid</label><input type="number" id="deposit" placeholder="0" step="0.01"></div>
+        <div class="money"><label>Supplier shipping</label><span class="sign">$</span><input type="number" id="shipping" placeholder="0" step="0.01"></div>
+        <div class="money"><label>Deposit paid</label><span class="sign">$</span><input type="number" id="deposit" placeholder="0" step="0.01"></div>
       </div>
       <div class="field">
         <label>Status</label>
@@ -169,7 +171,7 @@
         <h2>New expense</h2>
         <div class="row field">
           <div><label>Date</label><input type="date" id="eDate"></div>
-          <div><label>Amount</label><input type="number" id="eAmount" step="0.01" placeholder="0.00"></div>
+          <div class="money"><label>Amount</label><span class="sign">$</span><input type="number" id="eAmount" step="0.01" placeholder="0.00"></div>
         </div>
         <div class="field"><label>Category</label><select id="eCat"></select></div>
         <div class="field"><label>Description</label><input type="text" id="eDesc" placeholder="Linktree subscription"></div>
@@ -183,12 +185,12 @@
     <div class="page" id="page-contact">
       <div class="card">
         <h2>New contact</h2>
-        <div class="field"><label>Full name</label><input type="text" id="cName" placeholder="Cara Wilson"></div>
+        <div class="field"><label>Full name</label><input type="text" id="cName" placeholder="Jane Citizen"></div>
         <div class="row field">
           <div><label>Phone</label><input type="text" id="cPhone" placeholder="0412 345 678"></div>
           <div><label>Email</label><input type="text" id="cEmail" placeholder="name@email.com"></div>
         </div>
-        <div class="field"><label>Address</label><input type="text" id="cAddress" placeholder="12 Smith Street"></div>
+        <div class="field"><label>Address</label><input type="text" id="cAddress" placeholder="12 Example Street"></div>
         <div class="row field">
           <div><label>Suburb</label><input type="text" id="cSuburb"></div>
           <div style="max-width:100px"><label>State</label><select id="cState"></select></div>
@@ -279,11 +281,11 @@ function addItem(){
       ${cats.map(c => `<button type="button" class="chip" data-cat="${c}">${c}<span class="n">${counts[c]}</span></button>`).join('')}
     </div>
     <div class="pick">
-      <label>Search products</label>
-      <input class="search" type="text" placeholder="Type a brand or name" autocomplete="off">
+      <label>Search</label>
+      <input class="search" type="text" placeholder="Type a brand or name to narrow it down" autocomplete="off">
       <button type="button" class="clear" title="Clear">✕</button>
-      <div class="results"></div>
     </div>
+    <div class="results open"></div>
     <div class="chosen" style="display:none;margin-top:8px"></div>
     <div style="max-width:90px;margin-top:10px">
       <label>Qty</label>
@@ -343,7 +345,7 @@ function addItem(){
       search.style.display = 'block';
       div.querySelector('.pick label').style.display = 'block';
       search.value = '';
-      search.focus();
+      draw();
       refresh();
     });
     refresh();
@@ -360,7 +362,6 @@ function addItem(){
     draw();
   });
   search.addEventListener('focus', draw);
-  search.addEventListener('blur', () => setTimeout(() => results.classList.remove('open'), 120));
   search.addEventListener('keydown', (ev) => {
     const items = [...results.querySelectorAll('.res[data-i]')];
     if (!items.length) return;
@@ -393,7 +394,6 @@ function addItem(){
         div.querySelector('.pick label').style.display = 'block';
       }
       search.value = '';
-      search.focus();
       draw();
     });
   });
@@ -530,6 +530,11 @@ document.getElementById('saveContact').addEventListener('click', async (ev) => {
 /* ---------- dashboard ---------- */
 const money = v => '$' + Number(v || 0).toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+function shortName(n){
+  const p = String(n || '').trim().split(/\s+/);
+  return p.length < 2 ? (p[0] || '') : p[0] + ' ' + p[p.length - 1][0].toUpperCase();
+}
+
 async function loadDash(){
   document.getElementById('stats').innerHTML = '<div class="stat wide"><div class="k">Loading</div></div>';
   const r = await call({ action: 'dashboard' }).catch(() => ({ ok: false }));
@@ -550,7 +555,7 @@ async function loadDash(){
 
   document.getElementById('recent').innerHTML = d.recent.length ? `
     <table><tr><th>Date</th><th>Customer</th><th class="r">Collected</th><th class="r">Owing</th></tr>
-    ${d.recent.map(o => `<tr><td>${o.date}</td><td>${o.customer}</td>
+    ${d.recent.map(o => `<tr><td>${o.date}</td><td>${shortName(o.customer)}</td>
       <td class="r">${money(o.collected)}</td><td class="r">${money(o.owing)}</td></tr>`).join('')}
     </table>` : '<div class="hint">No orders yet.</div>';
 
