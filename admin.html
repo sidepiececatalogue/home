@@ -49,7 +49,8 @@
   .msg.ok{background:#EAF6EC;color:#2C6B3A;display:block}
   .msg.err{background:#FBE9E7;color:#8C2F39;display:block}
   .summary{background:#F4EBDF;border-radius:12px;padding:12px 14px;font-size:13px}
-  .summary div{display:flex;justify-content:space-between;padding:2px 0}
+  .summary div{display:flex;justify-content:space-between;gap:12px;padding:2px 0}
+  .summary span:last-child{white-space:nowrap}
   .summary .tot{border-top:1px solid var(--line);margin-top:6px;padding-top:7px;font-weight:600}
   .hint{font-size:11px;color:var(--muted);margin-top:8px}
   .money{position:relative}
@@ -350,17 +351,27 @@ let PW = '', DATA = { sellers: [], customers: [], products: [] };
 
 async function call(payload){
   const body = JSON.stringify(Object.assign({ password: PW }, payload));
-  let lastErr = null;
+  let detail = '';
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = await fetch(API, { method: 'POST', body: body, redirect: 'follow' });
       const text = await res.text();
-      try { return JSON.parse(text); }
-      catch (e) { lastErr = 'Sheet replied with something unexpected'; }
-    } catch (e) { lastErr = 'Could not reach the sheet'; }
-    await new Promise(r => setTimeout(r, 700));
+      try {
+        const json = JSON.parse(text);
+        if (json && typeof json === 'object') return json;
+        detail = 'Sheet sent back: ' + String(text).slice(0, 80);
+      } catch (e) {
+        const looksLikeLogin = /accounts\.google|sign in|<!DOCTYPE/i.test(text);
+        detail = looksLikeLogin
+          ? 'The script is not published for Anyone. Check Deploy settings.'
+          : 'Unexpected reply: ' + String(text).replace(/<[^>]*>/g, ' ').trim().slice(0, 90);
+      }
+    } catch (e) {
+      detail = 'No connection to the sheet (' + (e.message || 'network') + ')';
+    }
+    if (attempt === 0) await new Promise(r => setTimeout(r, 700));
   }
-  throw new Error(lastErr || 'Failed');
+  return { ok: false, error: detail || 'Failed' };
 }
 
 function msg(el, text, ok){
@@ -381,7 +392,7 @@ document.getElementById('unlock').addEventListener('click', async () => {
     document.getElementById('lock').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     start();
-  }catch(err){ msg('lockMsg', 'Could not reach the sheet', false); }
+  }catch(err){ msg('lockMsg', err.message || 'Could not reach the sheet', false); }
 });
 
 function start(){
@@ -552,12 +563,13 @@ function collect(){
 
 function refresh(){
   const items = collect();
-  const n = document.getElementById('postage').value;
-  const d = document.getElementById('discount').value;
+  const n = Number(document.getElementById('postage').value || 0);
+  const d = Number(document.getElementById('discount').value || 0);
+  const qty = items.reduce((s,i) => s + i.qty, 0);
   document.getElementById('summary').innerHTML =
-    `<div><span>Items</span><span>${items.reduce((s,i)=>s+i.qty,0)}</span></div>
-     <div><span>Postage</span><span>$${Number(n||0).toFixed(2)}</span></div>
-     <div><span>Discount</span><span>$${Number(d||0).toFixed(2)}</span></div>
+    `<div><span>Items</span><span>${qty}</span></div>
+     <div><span>Postage</span><span>$${n.toFixed(2)}</span></div>
+     <div><span>Discount</span><span>$${d.toFixed(2)}</span></div>
      <div class="tot"><span>Prices come from the sheet</span><span></span></div>`;
 }
 
@@ -569,40 +581,54 @@ document.getElementById('save').addEventListener('click', async (ev) => {
 
   ev.target.disabled = true;
   msg('saveMsg', 'Saving...', true);
-  try{
-    const r = await call({
-      action: 'addOrder',
-      date: document.getElementById('date').value,
-      seller: document.getElementById('seller').value,
-      customer: customer,
-      items: items,
-      postage: document.getElementById('postage').value,
-      discount: document.getElementById('discount').value,
-      shipping: document.getElementById('shipping').value,
-      deposit: document.getElementById('depositAmount').value,
-      depositDate: document.getElementById('depositDate').value,
-      status: document.getElementById('status').value,
-      notes: document.getElementById('notes').value,
-    });
-    if(r.ok){
-      msg('saveMsg', `Saved. ${r.added} item${r.added>1?'s':''} added at row ${r.row}.`, true);
-      document.getElementById('items').innerHTML = '';
-      addItem();
-      document.getElementById('customer').value = '';
-      document.getElementById('notes').value = '';
-      document.getElementById('depositAmount').value = '';
-      document.getElementById('discount').value = '';
-    }else{
-      msg('saveMsg', r.error || 'Failed', false);
-    }
-  }catch(err){
-    msg('saveMsg', 'Could not reach the sheet', false);
+
+  const payload = {
+    action: 'addOrder',
+    date: document.getElementById('date').value,
+    seller: document.getElementById('seller').value,
+    customer: customer,
+    items: items,
+    postage: document.getElementById('postage').value,
+    discount: document.getElementById('discount').value,
+    shipping: document.getElementById('shipping').value,
+    deposit: document.getElementById('depositAmount').value,
+    depositDate: document.getElementById('depositDate').value,
+    status: document.getElementById('status').value,
+    notes: document.getElementById('notes').value,
+  };
+
+  const clearForm = () => {
+    document.getElementById('items').innerHTML = '';
+    addItem();
+    document.getElementById('customer').value = '';
+    document.getElementById('notes').value = '';
+    document.getElementById('depositAmount').value = '';
+    document.getElementById('discount').value = '';
+  };
+
+  const r = await call(payload);
+
+  if (r.ok) {
+    msg('saveMsg', `Saved. ${r.added} item${r.added > 1 ? 's' : ''} added.`, true);
+    clearForm();
+    ev.target.disabled = false;
+    return;
+  }
+
+  // The reply did not come back. It often saved anyway, so go and look.
+  msg('saveMsg', 'Checking whether it saved...', true);
+  await new Promise(res => setTimeout(res, 1500));
+  const check = await call({ action: 'orders' });
+  if (check.ok && (check.orders || []).some(o =>
+        o.customer.trim().toLowerCase() === customer.toLowerCase() &&
+        o.items.length === items.length)) {
+    msg('saveMsg', 'Saved. It is in the sheet.', true);
+    clearForm();
+  } else {
+    msg('saveMsg', r.error || 'Did not save. Try again.', false);
   }
   ev.target.disabled = false;
 });
-
-
-
 
 
 /* ---------- orders ---------- */
@@ -674,7 +700,7 @@ document.getElementById('sSave').addEventListener('click', async (ev) => {
     deposit: val('sDeposit'), depositDate: val('sDepositDate'),
     finalPaid: val('sFinal'), finalDate: val('sFinalDate'),
     status: val('sStatus'), notes: val('sNotes'),
-  }).catch(() => ({ ok:false, error:'Could not reach the sheet' }));
+  }).catch(e => ({ ok:false, error: e.message || 'Could not reach the sheet' }));
   if(r.ok){ msg('sMsg', 'Saved.', true); await loadOrders(); setTimeout(closeSheet, 700); }
   else msg('sMsg', r.error || 'Failed', false);
   ev.target.disabled = false;
@@ -685,7 +711,7 @@ document.getElementById('sDelete').addEventListener('click', async (ev) => {
   if(!confirm('Delete this whole order? This cannot be undone.')) return;
   ev.target.disabled = true;
   const r = await call({ action: 'deleteOrder', rows: CURRENT.items.map(i => i.row) })
-    .catch(() => ({ ok:false, error:'Could not reach the sheet' }));
+    .catch(e => ({ ok:false, error: e.message || 'Could not reach the sheet' }));
   if(r.ok){ closeSheet(); loadOrders(); }
   else msg('sMsg', r.error || 'Failed', false);
   ev.target.disabled = false;
@@ -733,7 +759,7 @@ document.getElementById('saveProduct').addEventListener('click', async (ev) => {
     action: 'saveProduct', name: name, category: val('pCat'),
     transfer: val('pTransfer'), base: val('pBase'), cost: val('pCost'),
     image: val('pImage'), show: val('pShow'),
-  }).catch(() => ({ ok:false, error:'Could not reach the sheet' }));
+  }).catch(e => ({ ok:false, error: e.message || 'Could not reach the sheet' }));
   if(r.ok){
     msg('productMsg', 'Saved to the Products tab.', true);
     if(!DATA.products.some(p => p.name === name)) DATA.products.push({ name: name, category: val('pCat') });
@@ -785,7 +811,7 @@ document.getElementById('saveExpense').addEventListener('click', async (ev) => {
     amount: amount,
     paidBy: document.getElementById('ePaid').value,
     notes: document.getElementById('eNotes').value,
-  }).catch(() => ({ ok: false, error: 'Could not reach the sheet' }));
+  }).catch(e => ({ ok: false, error: e.message || 'Could not reach the sheet' }));
   if (r.ok) {
     msg('expenseMsg', 'Saved to the Expenses tab.', true);
     ['eAmount','eDesc','eNotes'].forEach(id => document.getElementById(id).value = '');
@@ -809,7 +835,7 @@ document.getElementById('saveContact').addEventListener('click', async (ev) => {
     state: document.getElementById('cState').value,
     postcode: document.getElementById('cPostcode').value,
     notes: document.getElementById('cNotes').value,
-  }).catch(() => ({ ok: false, error: 'Could not reach the sheet' }));
+  }).catch(e => ({ ok: false, error: e.message || 'Could not reach the sheet' }));
   if (r.ok) {
     msg('contactMsg', 'Saved. They will show in the customer list.', true);
     DATA.customers.push(name);
