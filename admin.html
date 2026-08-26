@@ -393,9 +393,9 @@ function msg(el, text, ok){
 document.getElementById('unlock').addEventListener('click', async () => {
   PW = document.getElementById('pw').value.trim();
   if(!PW) return;
-  msg('lockMsg', 'Checking...', true);
+  msg('lockMsg', 'Loading your products, this takes a moment the first time...', true);
   try{
-    const r = await call({ action: 'lists' });
+    const r = await call({ action: 'lists' }, { timeout: 25000 });
     if(!r.ok) return msg('lockMsg', r.error || 'Failed', false);
     DATA = r;
     try{ localStorage.setItem('sp-pw', PW); }catch(e){}
@@ -654,7 +654,7 @@ let ORDERS = [], CURRENT = null;
 
 async function loadOrders(){
   document.getElementById('olist').innerHTML = '<div class="hint">Loading...</div>';
-  const r = await call({ action: 'orders', fresh: !!window.__freshOrders }).catch(() => ({ ok:false }));
+  const r = await call({ action: 'orders', fresh: !!window.__freshOrders }, { timeout: 15000 }).catch(() => ({ ok:false }));
   if(!r.ok){ document.getElementById('olist').innerHTML = '<div class="hint">Could not load</div>'; return; }
   ORDERS = r.orders || [];
   drawOrders();
@@ -915,7 +915,7 @@ function shortName(n){
 
 async function loadDash(){
   document.getElementById('stats').innerHTML = '<div class="stat wide"><div class="k">Loading</div></div>';
-  const r = await call({ action: 'dashboard', fresh: !!window.__freshDash }).catch(() => ({ ok: false }));
+  const r = await call({ action: 'dashboard', fresh: !!window.__freshDash }, { timeout: 15000 }).catch(() => ({ ok: false }));
   if (!r.ok) {
     document.getElementById('stats').innerHTML = '<div class="stat wide"><div class="k">Could not load</div></div>';
     return;
