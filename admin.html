@@ -331,11 +331,18 @@ const API = 'https://script.google.com/macros/s/AKfycbwL0Fx-Fpb1Sq1ye5opnojLpb5c
 let PW = '', DATA = { sellers: [], customers: [], products: [] };
 
 async function call(payload){
-  const res = await fetch(API, {
-    method: 'POST',
-    body: JSON.stringify(Object.assign({ password: PW }, payload)),
-  });
-  return res.json();
+  const body = JSON.stringify(Object.assign({ password: PW }, payload));
+  let lastErr = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(API, { method: 'POST', body: body, redirect: 'follow' });
+      const text = await res.text();
+      try { return JSON.parse(text); }
+      catch (e) { lastErr = 'Sheet replied with something unexpected'; }
+    } catch (e) { lastErr = 'Could not reach the sheet'; }
+    await new Promise(r => setTimeout(r, 700));
+  }
+  throw new Error(lastErr || 'Failed');
 }
 
 function msg(el, text, ok){
