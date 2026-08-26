@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Side Piece Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FBF8F3; --white:#fff; --ink:#3B2F23; --muted:#97836F;
+    --beige:#E1C9B3; --line:rgba(59,47,35,.12); --green:#25D366;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--ink);
+    line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:40px}
+  button,input,select,textarea{font-family:inherit;font-size:14px;color:inherit}
+  .bar{background:var(--beige);padding:16px;text-align:center}
+  .bar h1{font-size:13px;letter-spacing:.3em;text-transform:uppercase;font-weight:500}
+  .wrap{max-width:660px;margin:0 auto;padding:18px 14px}
+  .card{background:var(--white);border-radius:16px;padding:16px;margin-bottom:14px;
+    box-shadow:0 4px 16px rgba(59,47,35,.06)}
+  label{display:block;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:5px;font-weight:500}
+  input,select,textarea{width:100%;padding:10px 11px;border:1px solid var(--line);
+    border-radius:10px;background:var(--white);outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--ink)}
+  .row{display:flex;gap:10px}
+  .row>*{flex:1}
+  .field{margin-bottom:12px}
+  .item{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;
+    background:#FDFBF8;position:relative}
+  .item .del{position:absolute;top:8px;right:8px;width:24px;height:24px;border:none;
+    background:transparent;color:var(--muted);cursor:pointer;font-size:15px}
+  .btn{width:100%;padding:13px;border:none;border-radius:999px;cursor:pointer;
+    font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:500}
+  .btn.dark{background:var(--ink);color:var(--cream)}
+  .btn.ghost{background:transparent;border:1px solid var(--ink);color:var(--ink)}
+  .btn:disabled{opacity:.45;cursor:default}
+  .msg{padding:11px;border-radius:10px;font-size:12.5px;margin-top:12px;display:none}
+  .msg.ok{background:#EAF6EC;color:#2C6B3A;display:block}
+  .msg.err{background:#FBE9E7;color:#8C2F39;display:block}
+  .summary{background:#F4EBDF;border-radius:12px;padding:12px 14px;font-size:13px}
+  .summary div{display:flex;justify-content:space-between;padding:2px 0}
+  .summary .tot{border-top:1px solid var(--line);margin-top:6px;padding-top:7px;font-weight:600}
+  .hint{font-size:11px;color:var(--muted);margin-top:8px}
+  .pick{position:relative}
+  .pick input{padding-right:30px}
+  .clear{position:absolute;right:8px;top:29px;border:none;background:transparent;
+    color:var(--muted);cursor:pointer;font-size:14px;display:none}
+  .results{position:absolute;left:0;right:0;top:100%;z-index:20;background:var(--white);
+    border:1px solid var(--line);border-radius:12px;margin-top:4px;max-height:230px;
+    overflow-y:auto;box-shadow:0 10px 26px rgba(59,47,35,.14);display:none}
+  .results.open{display:block}
+  .res{padding:9px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--line)}
+  .res:last-child{border-bottom:none}
+  .res:hover,.res.on{background:#F4EBDF}
+  .res small{display:block;color:var(--muted);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+  .chip{padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--white);
+    font-size:10.5px;cursor:pointer;white-space:nowrap}
+  .chip.on{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+  .chip .n{opacity:.55;margin-left:4px;font-size:9.5px}
+  .picked{font-size:13px;font-weight:500;padding:9px 11px;border:1px solid var(--ink);
+    border-radius:10px;background:#FDFBF8;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .picked button{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:14px}
+  .tabs{display:flex;gap:6px;justify-content:center;padding:12px 14px 0;flex-wrap:wrap}
+  .tab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--white);
+    font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;font-weight:500}
+  .tab.on{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+  .page{display:none}
+  .page.on{display:block}
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat{background:var(--white);border-radius:14px;padding:13px 14px;
+    box-shadow:0 4px 16px rgba(59,47,35,.06)}
+  .stat .k{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .stat .v{font-size:19px;font-weight:600;margin-top:3px}
+  .stat.wide{grid-column:1/-1;background:#F4EBDF}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--muted);padding:6px 4px;font-weight:500}
+  td{padding:7px 4px;border-top:1px solid var(--line)}
+  td.r,th.r{text-align:right}
+  h2{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="bar"><h1>Side Piece Admin</h1></div>
+
+<div class="wrap">
+
+  <div class="card" id="lock">
+    <h2>Sign in</h2>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="pw" placeholder="Enter password">
+    </div>
+    <button class="btn dark" id="unlock">Unlock</button>
+    <div class="msg" id="lockMsg"></div>
+  </div>
+
+  <div id="app" style="display:none">
+
+    <div class="tabs">
+      <button class="tab on" data-page="order">Order</button>
+      <button class="tab" data-page="expense">Expense</button>
+      <button class="tab" data-page="contact">Contact</button>
+      <button class="tab" data-page="dash">Dashboard</button>
+    </div>
+
+    <div class="page on" id="page-order">
+
+    <div class="card">
+      <h2>Order</h2>
+      <div class="row field">
+        <div>
+          <label>Date</label>
+          <input type="date" id="date">
+        </div>
+        <div>
+          <label>Seller</label>
+          <select id="seller"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Customer</label>
+        <input list="customerList" id="customer" placeholder="Type or pick">
+        <datalist id="customerList"></datalist>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Items</h2>
+      <div id="items"></div>
+      <button class="btn ghost" id="addItem">Add another item</button>
+    </div>
+
+    <div class="card">
+      <h2>Money</h2>
+      <div class="row field">
+        <div><label>Postage charged</label><input type="number" id="postage" value="15" step="0.01"></div>
+        <div><label>Discount</label><input type="number" id="discount" placeholder="0" step="0.01"></div>
+      </div>
+      <div class="row field">
+        <div><label>Supplier shipping</label><input type="number" id="shipping" placeholder="0" step="0.01"></div>
+        <div><label>Deposit paid</label><input type="number" id="deposit" placeholder="0" step="0.01"></div>
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select id="status">
+          <option>Pending</option><option>Ordered</option><option>Deposit Paid</option>
+          <option>Paid in Full</option><option>Shipped</option><option>Delivered</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="notes" rows="2" placeholder="Optional"></textarea>
+      </div>
+      <div class="summary" id="summary"></div>
+    </div>
+
+    <button class="btn dark" id="save">Save order</button>
+    <div class="msg" id="saveMsg"></div>
+    <div class="hint">Saves straight into the Sales tab. Formulas work out the rest.</div>
+    </div>
+
+    <div class="page" id="page-expense">
+      <div class="card">
+        <h2>New expense</h2>
+        <div class="row field">
+          <div><label>Date</label><input type="date" id="eDate"></div>
+          <div><label>Amount</label><input type="number" id="eAmount" step="0.01" placeholder="0.00"></div>
+        </div>
+        <div class="field"><label>Category</label><select id="eCat"></select></div>
+        <div class="field"><label>Description</label><input type="text" id="eDesc" placeholder="Linktree subscription"></div>
+        <div class="field"><label>Paid by</label><select id="ePaid"></select></div>
+        <div class="field"><label>Notes</label><textarea id="eNotes" rows="2" placeholder="Optional"></textarea></div>
+        <button class="btn dark" id="saveExpense">Save expense</button>
+        <div class="msg" id="expenseMsg"></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-contact">
+      <div class="card">
+        <h2>New contact</h2>
+        <div class="field"><label>Full name</label><input type="text" id="cName" placeholder="Cara Wilson"></div>
+        <div class="row field">
+          <div><label>Phone</label><input type="text" id="cPhone" placeholder="0412 345 678"></div>
+          <div><label>Email</label><input type="text" id="cEmail" placeholder="name@email.com"></div>
+        </div>
+        <div class="field"><label>Address</label><input type="text" id="cAddress" placeholder="12 Smith Street"></div>
+        <div class="row field">
+          <div><label>Suburb</label><input type="text" id="cSuburb"></div>
+          <div style="max-width:100px"><label>State</label><select id="cState"></select></div>
+          <div style="max-width:110px"><label>Postcode</label><input type="text" id="cPostcode"></div>
+        </div>
+        <div class="field"><label>Notes</label><textarea id="cNotes" rows="2" placeholder="Optional"></textarea></div>
+        <button class="btn dark" id="saveContact">Save contact</button>
+        <div class="msg" id="contactMsg"></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-dash">
+      <div class="card">
+        <h2>Overview</h2>
+        <div class="stats" id="stats"></div>
+        <button class="btn ghost" id="refreshDash" style="margin-top:12px">Refresh</button>
+      </div>
+      <div class="card"><h2>Recent orders</h2><div id="recent"></div></div>
+      <div class="card"><h2>By seller</h2><div id="bySeller"></div></div>
+      <div class="card"><h2>Top products</h2><div id="topProducts"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbwL0Fx-Fpb1Sq1ye5opnojLpb5ceX6ZQOLnnNf2IaQX3zUr7OCXwe4ZIEUpK3w6gGaclA/exec';
+let PW = '', DATA = { sellers: [], customers: [], products: [] };
+
+async function call(payload){
+  const res = await fetch(API, {
+    method: 'POST',
+    body: JSON.stringify(Object.assign({ password: PW }, payload)),
+  });
+  return res.json();
+}
+
+function msg(el, text, ok){
+  const m = document.getElementById(el);
+  m.textContent = text;
+  m.className = 'msg ' + (ok ? 'ok' : 'err');
+}
+
+document.getElementById('unlock').addEventListener('click', async () => {
+  PW = document.getElementById('pw').value.trim();
+  if(!PW) return;
+  msg('lockMsg', 'Checking...', true);
+  try{
+    const r = await call({ action: 'lists' });
+    if(!r.ok) return msg('lockMsg', r.error || 'Failed', false);
+    DATA = r;
+    try{ sessionStorage.setItem('sp-pw', PW); }catch(e){}
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    start();
+  }catch(err){ msg('lockMsg', 'Could not reach the sheet', false); }
+});
+
+function start(){
+  document.getElementById('date').valueAsDate = new Date();
+  document.getElementById('eDate').valueAsDate = new Date();
+  document.getElementById('eCat').innerHTML =
+    (DATA.expenseCats || []).map(c => `<option>${c}</option>`).join('');
+  document.getElementById('ePaid').innerHTML =
+    DATA.sellers.map(s => `<option>${s}</option>`).join('');
+  document.getElementById('cState').innerHTML =
+    (DATA.states || []).map(s => `<option>${s}</option>`).join('');
+  const sel = document.getElementById('seller');
+  sel.innerHTML = DATA.sellers.map(s => `<option>${s}</option>`).join('');
+  document.getElementById('customerList').innerHTML =
+    DATA.customers.map(c => `<option value="${c}">`).join('');
+  addItem();
+  ['postage','discount','shipping','deposit'].forEach(id =>
+    document.getElementById(id).addEventListener('input', refresh));
+}
+
+function addItem(){
+  const counts = {};
+  DATA.products.forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1; });
+  const cats = Object.keys(counts).sort();
+
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.innerHTML = `
+    <button class="del" title="Remove">✕</button>
+    <label>Category</label>
+    <div class="chips">
+      <button type="button" class="chip on" data-cat="">All<span class="n">${DATA.products.length}</span></button>
+      ${cats.map(c => `<button type="button" class="chip" data-cat="${c}">${c}<span class="n">${counts[c]}</span></button>`).join('')}
+    </div>
+    <div class="pick">
+      <label>Search products</label>
+      <input class="search" type="text" placeholder="Type a brand or name" autocomplete="off">
+      <button type="button" class="clear" title="Clear">✕</button>
+      <div class="results"></div>
+    </div>
+    <div class="chosen" style="display:none;margin-top:8px"></div>
+    <div style="max-width:90px;margin-top:10px">
+      <label>Qty</label>
+      <input type="number" class="qty" value="1" min="1">
+    </div>`;
+  document.getElementById('items').appendChild(div);
+
+  const search = div.querySelector('.search');
+  const results = div.querySelector('.results');
+  const chosen = div.querySelector('.chosen');
+  const clear = div.querySelector('.clear');
+  let cat = '', picked = null, marked = -1;
+
+  const matches = () => {
+    const q = search.value.trim().toLowerCase();
+    const words = q.split(/\s+/).filter(Boolean);
+    return DATA.products
+      .filter(p => !cat || p.category === cat)
+      .filter(p => {
+        if (!words.length) return true;
+        const hay = (p.name + ' ' + p.category).toLowerCase();
+        return words.every(w => hay.includes(w));
+      })
+      .slice(0, 40);
+  };
+
+  const draw = () => {
+    const list = matches();
+    marked = -1;
+    if (!list.length) {
+      results.innerHTML = '<div class="res" style="color:#97836F">Nothing matches</div>';
+    } else {
+      results.innerHTML = list.map((p, i) =>
+        `<div class="res" data-i="${i}"><small>${p.category}</small>${p.name}</div>`).join('');
+      [...results.querySelectorAll('.res')].forEach(el => {
+        el.addEventListener('mousedown', ev => {
+          ev.preventDefault();
+          choose(list[Number(el.dataset.i)]);
+        });
+      });
+    }
+    results.classList.add('open');
+  };
+
+  const choose = (p) => {
+    picked = p;
+    search.style.display = 'none';
+    div.querySelector('.pick label').style.display = 'none';
+    clear.style.display = 'none';
+    results.classList.remove('open');
+    chosen.style.display = 'block';
+    chosen.innerHTML =
+      `<div class="picked"><span>${p.name}</span><button type="button" title="Change">✕</button></div>`;
+    chosen.querySelector('button').addEventListener('click', () => {
+      picked = null;
+      chosen.style.display = 'none';
+      search.style.display = 'block';
+      div.querySelector('.pick label').style.display = 'block';
+      search.value = '';
+      search.focus();
+      refresh();
+    });
+    refresh();
+  };
+
+  div.getItem = () => picked ? {
+    category: picked.category,
+    name: picked.name,
+    qty: Number(div.querySelector('.qty').value) || 1,
+  } : null;
+
+  search.addEventListener('input', () => {
+    clear.style.display = search.value ? 'block' : 'none';
+    draw();
+  });
+  search.addEventListener('focus', draw);
+  search.addEventListener('blur', () => setTimeout(() => results.classList.remove('open'), 120));
+  search.addEventListener('keydown', (ev) => {
+    const items = [...results.querySelectorAll('.res[data-i]')];
+    if (!items.length) return;
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+      ev.preventDefault();
+      marked += (ev.key === 'ArrowDown' ? 1 : -1);
+      if (marked < 0) marked = items.length - 1;
+      if (marked >= items.length) marked = 0;
+      items.forEach(el => el.classList.remove('on'));
+      items[marked].classList.add('on');
+      items[marked].scrollIntoView({ block: 'nearest' });
+    }
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      const list = matches();
+      choose(list[marked >= 0 ? marked : 0]);
+    }
+  });
+  clear.addEventListener('click', () => { search.value = ''; clear.style.display = 'none'; search.focus(); draw(); });
+
+  div.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      div.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+      chip.classList.add('on');
+      cat = chip.dataset.cat;
+      if (picked && cat && picked.category !== cat) {
+        picked = null;
+        chosen.style.display = 'none';
+        search.style.display = 'block';
+        div.querySelector('.pick label').style.display = 'block';
+      }
+      search.value = '';
+      search.focus();
+      draw();
+    });
+  });
+
+  div.querySelector('.qty').addEventListener('input', refresh);
+  div.querySelector('.del').addEventListener('click', () => {
+    if (document.querySelectorAll('.item').length > 1) { div.remove(); refresh(); }
+  });
+  refresh();
+}
+document.getElementById('addItem').addEventListener('click', addItem);
+
+function collect(){
+  return [...document.querySelectorAll('.item')]
+    .map(d => d.getItem ? d.getItem() : null)
+    .filter(Boolean);
+}
+
+function refresh(){
+  const items = collect();
+  const n = document.getElementById('postage').value;
+  const d = document.getElementById('discount').value;
+  document.getElementById('summary').innerHTML =
+    `<div><span>Items</span><span>${items.reduce((s,i)=>s+i.qty,0)}</span></div>
+     <div><span>Postage</span><span>$${Number(n||0).toFixed(2)}</span></div>
+     <div><span>Discount</span><span>$${Number(d||0).toFixed(2)}</span></div>
+     <div class="tot"><span>Prices come from the sheet</span><span></span></div>`;
+}
+
+document.getElementById('save').addEventListener('click', async (ev) => {
+  const items = collect();
+  const customer = document.getElementById('customer').value.trim();
+  if(!customer) return msg('saveMsg', 'Add a customer name', false);
+  if(!items.length) return msg('saveMsg', 'Add at least one item', false);
+
+  ev.target.disabled = true;
+  msg('saveMsg', 'Saving...', true);
+  try{
+    const r = await call({
+      action: 'addOrder',
+      date: document.getElementById('date').value,
+      seller: document.getElementById('seller').value,
+      customer: customer,
+      items: items,
+      postage: document.getElementById('postage').value,
+      discount: document.getElementById('discount').value,
+      shipping: document.getElementById('shipping').value,
+      deposit: document.getElementById('deposit').value,
+      status: document.getElementById('status').value,
+      notes: document.getElementById('notes').value,
+    });
+    if(r.ok){
+      msg('saveMsg', `Saved. ${r.added} item${r.added>1?'s':''} added at row ${r.row}.`, true);
+      document.getElementById('items').innerHTML = '';
+      addItem();
+      document.getElementById('customer').value = '';
+      document.getElementById('notes').value = '';
+      document.getElementById('deposit').value = '';
+      document.getElementById('discount').value = '';
+    }else{
+      msg('saveMsg', r.error || 'Failed', false);
+    }
+  }catch(err){
+    msg('saveMsg', 'Could not reach the sheet', false);
+  }
+  ev.target.disabled = false;
+});
+
+
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+    t.classList.add('on');
+    document.getElementById('page-' + t.dataset.page).classList.add('on');
+    if (t.dataset.page === 'dash') loadDash();
+  });
+});
+
+/* ---------- expense ---------- */
+document.getElementById('saveExpense').addEventListener('click', async (ev) => {
+  const amount = document.getElementById('eAmount').value;
+  const desc = document.getElementById('eDesc').value.trim();
+  if (!amount) return msg('expenseMsg', 'Add an amount', false);
+  if (!desc) return msg('expenseMsg', 'Add a description', false);
+  ev.target.disabled = true;
+  msg('expenseMsg', 'Saving...', true);
+  const r = await call({
+    action: 'addExpense',
+    date: document.getElementById('eDate').value,
+    category: document.getElementById('eCat').value,
+    description: desc,
+    amount: amount,
+    paidBy: document.getElementById('ePaid').value,
+    notes: document.getElementById('eNotes').value,
+  }).catch(() => ({ ok: false, error: 'Could not reach the sheet' }));
+  if (r.ok) {
+    msg('expenseMsg', 'Saved to the Expenses tab.', true);
+    ['eAmount','eDesc','eNotes'].forEach(id => document.getElementById(id).value = '');
+  } else msg('expenseMsg', r.error || 'Failed', false);
+  ev.target.disabled = false;
+});
+
+/* ---------- contact ---------- */
+document.getElementById('saveContact').addEventListener('click', async (ev) => {
+  const name = document.getElementById('cName').value.trim();
+  if (!name) return msg('contactMsg', 'Add a name', false);
+  ev.target.disabled = true;
+  msg('contactMsg', 'Saving...', true);
+  const r = await call({
+    action: 'addContact',
+    name: name,
+    phone: document.getElementById('cPhone').value,
+    email: document.getElementById('cEmail').value,
+    address: document.getElementById('cAddress').value,
+    suburb: document.getElementById('cSuburb').value,
+    state: document.getElementById('cState').value,
+    postcode: document.getElementById('cPostcode').value,
+    notes: document.getElementById('cNotes').value,
+  }).catch(() => ({ ok: false, error: 'Could not reach the sheet' }));
+  if (r.ok) {
+    msg('contactMsg', 'Saved. They will show in the customer list.', true);
+    DATA.customers.push(name);
+    document.getElementById('customerList').innerHTML =
+      DATA.customers.map(c => `<option value="${c}">`).join('');
+    ['cName','cPhone','cEmail','cAddress','cSuburb','cPostcode','cNotes']
+      .forEach(id => document.getElementById(id).value = '');
+  } else msg('contactMsg', r.error || 'Failed', false);
+  ev.target.disabled = false;
+});
+
+/* ---------- dashboard ---------- */
+const money = v => '$' + Number(v || 0).toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+async function loadDash(){
+  document.getElementById('stats').innerHTML = '<div class="stat wide"><div class="k">Loading</div></div>';
+  const r = await call({ action: 'dashboard' }).catch(() => ({ ok: false }));
+  if (!r.ok) {
+    document.getElementById('stats').innerHTML = '<div class="stat wide"><div class="k">Could not load</div></div>';
+    return;
+  }
+  const d = r.data;
+  const net = d.profit - d.expenses;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="k">Orders</div><div class="v">${d.orders}</div></div>
+    <div class="stat"><div class="k">Items sold</div><div class="v">${d.items}</div></div>
+    <div class="stat"><div class="k">Collected</div><div class="v">${money(d.collected)}</div></div>
+    <div class="stat"><div class="k">Paid to supplier</div><div class="v">${money(d.paid)}</div></div>
+    <div class="stat"><div class="k">Still owing</div><div class="v">${money(d.owing)}</div></div>
+    <div class="stat"><div class="k">Expenses</div><div class="v">${money(d.expenses)}</div></div>
+    <div class="stat wide"><div class="k">Net profit</div><div class="v">${money(net)}</div></div>`;
+
+  document.getElementById('recent').innerHTML = d.recent.length ? `
+    <table><tr><th>Date</th><th>Customer</th><th class="r">Collected</th><th class="r">Owing</th></tr>
+    ${d.recent.map(o => `<tr><td>${o.date}</td><td>${o.customer}</td>
+      <td class="r">${money(o.collected)}</td><td class="r">${money(o.owing)}</td></tr>`).join('')}
+    </table>` : '<div class="hint">No orders yet.</div>';
+
+  const sellers = Object.keys(d.sellers);
+  document.getElementById('bySeller').innerHTML = sellers.length ? `
+    <table><tr><th>Seller</th><th class="r">Items</th><th class="r">Collected</th><th class="r">Profit</th></tr>
+    ${sellers.map(s => `<tr><td>${s}</td><td class="r">${d.sellers[s].items}</td>
+      <td class="r">${money(d.sellers[s].collected)}</td>
+      <td class="r">${money(d.sellers[s].profit)}</td></tr>`).join('')}
+    </table>` : '<div class="hint">No sales yet.</div>';
+
+  document.getElementById('topProducts').innerHTML = d.top.length ? `
+    <table><tr><th>Product</th><th class="r">Sold</th></tr>
+    ${d.top.map(p => `<tr><td>${p.name}</td><td class="r">${p.qty}</td></tr>`).join('')}
+    </table>` : '<div class="hint">Nothing sold yet.</div>';
+}
+document.getElementById('refreshDash').addEventListener('click', loadDash);
+
+try{
+  const saved = sessionStorage.getItem('sp-pw');
+  if(saved){ document.getElementById('pw').value = saved; }
+}catch(e){}
+</script>
+</body>
+</html>
