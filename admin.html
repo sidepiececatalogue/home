@@ -352,7 +352,7 @@ document.getElementById('unlock').addEventListener('click', async () => {
     const r = await call({ action: 'lists' });
     if(!r.ok) return msg('lockMsg', r.error || 'Failed', false);
     DATA = r;
-    try{ sessionStorage.setItem('sp-pw', PW); }catch(e){}
+    try{ localStorage.setItem('sp-pw', PW); }catch(e){}
     document.getElementById('lock').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     start();
@@ -843,10 +843,19 @@ async function loadDash(){
 }
 document.getElementById('refreshDash').addEventListener('click', loadDash);
 
+// remember the password so Face ID unlocking is enough
 try{
-  const saved = sessionStorage.getItem('sp-pw');
-  if(saved){ document.getElementById('pw').value = saved; }
+  const saved = localStorage.getItem('sp-pw');
+  if(saved){
+    document.getElementById('pw').value = saved;
+    setTimeout(() => document.getElementById('unlock').click(), 150);
+  }
 }catch(e){}
+
+// Enter goes straight to unlock
+document.getElementById('pw').addEventListener('keydown', e => {
+  if(e.key === 'Enter') document.getElementById('unlock').click();
+});
 </script>
 </body>
 </html>
