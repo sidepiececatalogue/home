@@ -169,8 +169,12 @@
       </div>
       <div class="field">
         <label>Customer</label>
-        <input list="customerList" id="customer" placeholder="Type or pick">
-        <datalist id="customerList"></datalist>
+        <div class="pick">
+          <input type="text" id="customer" placeholder="Tap to see your customers, or type a new name" autocomplete="off">
+          <button type="button" class="clear" id="custClear" title="Clear">✕</button>
+        </div>
+        <div class="results" id="custResults"></div>
+        <div class="hint" id="custHint" style="margin-top:6px"></div>
       </div>
     </div>
 
@@ -408,8 +412,6 @@ function start(){
     (DATA.states || []).map(s => `<option>${s}</option>`).join('');
   const sel = document.getElementById('seller');
   sel.innerHTML = DATA.sellers.map(s => `<option>${s}</option>`).join('');
-  document.getElementById('customerList').innerHTML =
-    DATA.customers.map(c => `<option value="${c}">`).join('');
   addItem();
   ['postage','discount','shipping','depositAmount'].forEach(id =>
     document.getElementById(id).addEventListener('input', refresh));
@@ -606,6 +608,12 @@ document.getElementById('save').addEventListener('click', async (ev) => {
     document.getElementById('discount').value = '';
   };
 
+  const known = (DATA.customers || []).some(c => c.toLowerCase() === customer.toLowerCase());
+  if (!known) {
+    await call({ action: 'addContact', name: customer }).catch(() => {});
+    DATA.customers.push(customer);
+  }
+
   const r = await call(payload);
 
   if (r.ok) {
@@ -767,6 +775,46 @@ document.getElementById('saveProduct').addEventListener('click', async (ev) => {
   ev.target.disabled = false;
 });
 
+/* ---------- customer picker ---------- */
+const custInput = document.getElementById('customer');
+const custResults = document.getElementById('custResults');
+const custClear = document.getElementById('custClear');
+
+function drawCustomers(){
+  const q = custInput.value.trim().toLowerCase();
+  const words = q.split(/\s+/).filter(Boolean);
+  const list = (DATA.customers || [])
+    .filter(c => !words.length || words.every(w => c.toLowerCase().includes(w)))
+    .slice(0, 40);
+
+  const exact = (DATA.customers || []).some(c => c.toLowerCase() === q);
+  document.getElementById('custHint').textContent =
+    (q && !exact) ? 'New customer. Saving the order adds them to your list.' : '';
+
+  custResults.innerHTML = list.length
+    ? list.map((c, i) => `<div class="res" data-i="${i}">${c}</div>`).join('')
+    : '<div class="res" style="color:#97836F">No match. It will be saved as a new customer.</div>';
+  custResults.classList.add('open');
+  [...custResults.querySelectorAll('.res[data-i]')].forEach(el => {
+    el.addEventListener('mousedown', ev => {
+      ev.preventDefault();
+      custInput.value = list[Number(el.dataset.i)];
+      custResults.classList.remove('open');
+      custClear.style.display = 'block';
+      document.getElementById('custHint').textContent = '';
+    });
+  });
+}
+custInput.addEventListener('focus', drawCustomers);
+custInput.addEventListener('input', () => {
+  custClear.style.display = custInput.value ? 'block' : 'none';
+  drawCustomers();
+});
+custInput.addEventListener('blur', () => setTimeout(() => custResults.classList.remove('open'), 150));
+custClear.addEventListener('click', () => {
+  custInput.value = ''; custClear.style.display = 'none'; drawCustomers(); custInput.focus();
+});
+
 /* ---------- deposit toggle ---------- */
 document.querySelectorAll('#depChips .chip').forEach(c => {
   c.addEventListener('click', () => {
@@ -839,8 +887,6 @@ document.getElementById('saveContact').addEventListener('click', async (ev) => {
   if (r.ok) {
     msg('contactMsg', 'Saved. They will show in the customer list.', true);
     DATA.customers.push(name);
-    document.getElementById('customerList').innerHTML =
-      DATA.customers.map(c => `<option value="${c}">`).join('');
     ['cName','cPhone','cEmail','cAddress','cSuburb','cPostcode','cNotes']
       .forEach(id => document.getElementById(id).value = '');
   } else msg('contactMsg', r.error || 'Failed', false);
