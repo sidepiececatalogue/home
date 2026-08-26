@@ -145,7 +145,21 @@
       </div>
       <div class="row field">
         <div class="money"><label>Supplier shipping</label><span class="sign">$</span><input type="number" id="shipping" placeholder="0" step="0.01"></div>
-        <div class="money"><label>Deposit paid</label><span class="sign">$</span><input type="number" id="deposit" placeholder="0" step="0.01"></div>
+        <div></div>
+      </div>
+      <div class="field">
+        <label>Deposit</label>
+        <div class="chips" id="depChips">
+          <button type="button" class="chip on" data-dep="no">Not paid yet</button>
+          <button type="button" class="chip" data-dep="yes">Deposit paid</button>
+        </div>
+        <div id="depWrap" style="display:none">
+          <div class="row">
+            <div class="money"><label>Amount</label><span class="sign">$</span>
+              <input type="number" id="depositAmount" placeholder="0" step="0.01"></div>
+            <div><label>Date paid</label><input type="date" id="depositDate"></div>
+          </div>
+        </div>
       </div>
       <div class="field">
         <label>Status</label>
@@ -262,7 +276,7 @@ function start(){
   document.getElementById('customerList').innerHTML =
     DATA.customers.map(c => `<option value="${c}">`).join('');
   addItem();
-  ['postage','discount','shipping','deposit'].forEach(id =>
+  ['postage','discount','shipping','depositAmount'].forEach(id =>
     document.getElementById(id).addEventListener('input', refresh));
 }
 
@@ -441,7 +455,8 @@ document.getElementById('save').addEventListener('click', async (ev) => {
       postage: document.getElementById('postage').value,
       discount: document.getElementById('discount').value,
       shipping: document.getElementById('shipping').value,
-      deposit: document.getElementById('deposit').value,
+      deposit: document.getElementById('depositAmount').value,
+      depositDate: document.getElementById('depositDate').value,
       status: document.getElementById('status').value,
       notes: document.getElementById('notes').value,
     });
@@ -451,7 +466,7 @@ document.getElementById('save').addEventListener('click', async (ev) => {
       addItem();
       document.getElementById('customer').value = '';
       document.getElementById('notes').value = '';
-      document.getElementById('deposit').value = '';
+      document.getElementById('depositAmount').value = '';
       document.getElementById('discount').value = '';
     }else{
       msg('saveMsg', r.error || 'Failed', false);
@@ -463,6 +478,22 @@ document.getElementById('save').addEventListener('click', async (ev) => {
 });
 
 
+
+/* ---------- deposit toggle ---------- */
+document.querySelectorAll('#depChips .chip').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('#depChips .chip').forEach(x => x.classList.remove('on'));
+    c.classList.add('on');
+    const paid = c.dataset.dep === 'yes';
+    document.getElementById('depWrap').style.display = paid ? 'block' : 'none';
+    if (paid && !document.getElementById('depositDate').value) {
+      document.getElementById('depositDate').valueAsDate = new Date();
+    }
+    if (!paid) document.getElementById('depositAmount').value = '';
+    const st = document.getElementById('status');
+    if (paid && st.value === 'Pending') st.value = 'Deposit Paid';
+  });
+});
 
 /* ---------- tabs ---------- */
 document.querySelectorAll('.tab').forEach(t => {
