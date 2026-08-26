@@ -82,6 +82,28 @@
     color:var(--muted);padding:6px 4px;font-weight:500}
   td{padding:7px 4px;border-top:1px solid var(--line)}
   td.r,th.r{text-align:right}
+  .olist .o{background:var(--white);border-radius:14px;padding:12px 14px;margin-bottom:9px;
+    box-shadow:0 3px 12px rgba(59,47,35,.06);cursor:pointer}
+  .o .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .o .who{font-weight:500;font-size:13.5px}
+  .o .when{font-size:10.5px;color:var(--muted)}
+  .o .line{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .o .tag{display:inline-block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+    padding:3px 8px;border-radius:999px;background:#F4EBDF;margin-top:6px}
+  .o .tag.owed{background:#FBE9E7;color:#8C2F39}
+  .o .tag.done{background:#EAF6EC;color:#2C6B3A}
+  .sheetbg{position:fixed;inset:0;background:rgba(59,47,35,.4);z-index:60;display:none}
+  .sheetbg.on{display:block}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:61;background:var(--cream);
+    border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;padding:16px 14px 30px;
+    display:none;box-shadow:0 -10px 40px rgba(59,47,35,.2)}
+  .sheet.on{display:block}
+  .sheet .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .sheet .head h2{margin:0}
+  .x{border:none;background:transparent;font-size:18px;color:var(--muted);cursor:pointer}
+  .lines{font-size:12.5px}
+  .lines .l{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line)}
+  .danger{background:#FBE9E7;color:#8C2F39;border:1px solid #F0C9C4}
   h2{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px;font-weight:600}
 </style>
 </head>
@@ -107,6 +129,8 @@
       <button class="tab on" data-page="order">Order</button>
       <button class="tab" data-page="expense">Expense</button>
       <button class="tab" data-page="contact">Contact</button>
+      <button class="tab" data-page="orders">Orders</button>
+      <button class="tab" data-page="product">Products</button>
       <button class="tab" data-page="dash">Dashboard</button>
     </div>
 
@@ -216,6 +240,44 @@
       </div>
     </div>
 
+    <div class="page" id="page-orders">
+      <div class="card">
+        <h2>Recent orders</h2>
+        <input type="text" id="oSearch" placeholder="Search customer or order id" style="margin-bottom:10px">
+        <div class="olist" id="olist"><div class="hint">Loading...</div></div>
+        <button class="btn ghost" id="refreshOrders">Refresh</button>
+      </div>
+    </div>
+
+    <div class="page" id="page-product">
+      <div class="card">
+        <h2>Add or edit a product</h2>
+        <div class="field">
+          <label>Find an existing product to edit</label>
+          <input type="text" id="pSearch" placeholder="Type a name" autocomplete="off">
+          <div class="results" id="pResults"></div>
+        </div>
+        <div class="field"><label>Name</label><input type="text" id="pName" placeholder="Gucci Marmont Mini Bag"></div>
+        <div class="field"><label>Category</label><select id="pCat"></select></div>
+        <div class="row field">
+          <div class="money"><label>Transfer price</label><span class="sign">$</span>
+            <input type="number" id="pTransfer" step="0.01" placeholder="0"></div>
+          <div class="money"><label>Base price</label><span class="sign">$</span>
+            <input type="number" id="pBase" step="0.01" placeholder="0"></div>
+        </div>
+        <div class="row field">
+          <div class="money"><label>Cost price</label><span class="sign">$</span>
+            <input type="number" id="pCost" step="0.01" placeholder="0"></div>
+          <div><label>Show in catalogue</label>
+            <select id="pShow"><option>Yes</option><option>No</option></select></div>
+        </div>
+        <div class="field"><label>Image link</label><input type="text" id="pImage" placeholder="https://..."></div>
+        <button class="btn dark" id="saveProduct">Save product</button>
+        <div class="msg" id="productMsg"></div>
+        <div class="hint">Cost price is what makes profit correct. Fill it in as you go.</div>
+      </div>
+    </div>
+
     <div class="page" id="page-dash">
       <div class="card">
         <h2>Overview</h2>
@@ -227,6 +289,41 @@
       <div class="card"><h2>Top products</h2><div id="topProducts"></div></div>
     </div>
   </div>
+</div>
+
+<div class="sheetbg" id="sheetbg"></div>
+<div class="sheet" id="sheet">
+  <div class="head"><h2 id="sTitle">Order</h2><button class="x" id="sClose">✕</button></div>
+  <div class="card">
+    <div id="sLines" class="lines"></div>
+  </div>
+  <div class="card">
+    <h2>Money</h2>
+    <div class="row field">
+      <div class="money"><label>Postage charged</label><span class="sign">$</span><input type="number" id="sPostage" step="0.01"></div>
+      <div class="money"><label>Discount</label><span class="sign">$</span><input type="number" id="sDiscount" step="0.01"></div>
+    </div>
+    <div class="field">
+      <div class="money"><label>Supplier shipping</label><span class="sign">$</span><input type="number" id="sShipping" step="0.01"></div>
+    </div>
+    <div class="row field">
+      <div class="money"><label>Deposit paid</label><span class="sign">$</span><input type="number" id="sDeposit" step="0.01"></div>
+      <div><label>Deposit date</label><input type="date" id="sDepositDate"></div>
+    </div>
+    <div class="row field">
+      <div class="money"><label>Final paid</label><span class="sign">$</span><input type="number" id="sFinal" step="0.01"></div>
+      <div><label>Final date</label><input type="date" id="sFinalDate"></div>
+    </div>
+    <div class="field"><label>Status</label>
+      <select id="sStatus">
+        <option>Pending</option><option>Ordered</option><option>Deposit Paid</option>
+        <option>Paid in Full</option><option>Shipped</option><option>Delivered</option><option>Refunded</option>
+      </select></div>
+    <div class="field"><label>Notes</label><textarea id="sNotes" rows="2"></textarea></div>
+    <button class="btn dark" id="sSave">Save changes</button>
+    <div class="msg" id="sMsg"></div>
+  </div>
+  <button class="btn danger" id="sDelete" style="margin-top:4px">Delete this order</button>
 </div>
 
 <script>
@@ -269,6 +366,8 @@ function start(){
     (DATA.expenseCats || []).map(c => `<option>${c}</option>`).join('');
   document.getElementById('ePaid').innerHTML =
     DATA.sellers.map(s => `<option>${s}</option>`).join('');
+  document.getElementById('pCat').innerHTML =
+    [...new Set(DATA.products.map(p => p.category))].sort().map(c => `<option>${c}</option>`).join('');
   document.getElementById('cState').innerHTML =
     (DATA.states || []).map(s => `<option>${s}</option>`).join('');
   const sel = document.getElementById('seller');
@@ -479,6 +578,144 @@ document.getElementById('save').addEventListener('click', async (ev) => {
 
 
 
+
+
+/* ---------- orders ---------- */
+let ORDERS = [], CURRENT = null;
+
+async function loadOrders(){
+  document.getElementById('olist').innerHTML = '<div class="hint">Loading...</div>';
+  const r = await call({ action: 'orders' }).catch(() => ({ ok:false }));
+  if(!r.ok){ document.getElementById('olist').innerHTML = '<div class="hint">Could not load</div>'; return; }
+  ORDERS = r.orders || [];
+  drawOrders();
+}
+
+function drawOrders(){
+  const q = document.getElementById('oSearch').value.trim().toLowerCase();
+  const list = ORDERS.filter(o => !q ||
+    (o.customer + ' ' + o.id).toLowerCase().includes(q));
+  document.getElementById('olist').innerHTML = list.length ? list.map((o, i) => {
+    const tag = o.owing > 0
+      ? `<span class="tag owed">Owing ${money(o.owing)}</span>`
+      : `<span class="tag done">${o.status || 'Settled'}</span>`;
+    return `<div class="o" data-i="${ORDERS.indexOf(o)}">
+      <div class="top"><span class="who">${shortName(o.customer)}</span>
+        <span class="when">${o.date}</span></div>
+      <div class="line">${o.items.length} item${o.items.length>1?'s':''} · ${money(o.collected)} · ${o.seller}</div>
+      ${tag}</div>`;
+  }).join('') : '<div class="hint">No orders yet.</div>';
+  document.querySelectorAll('.o').forEach(el => {
+    el.addEventListener('click', () => openOrder(ORDERS[Number(el.dataset.i)]));
+  });
+}
+document.getElementById('oSearch').addEventListener('input', drawOrders);
+document.getElementById('refreshOrders').addEventListener('click', loadOrders);
+
+function openOrder(o){
+  CURRENT = o;
+  document.getElementById('sTitle').textContent = shortName(o.customer) + ' · ' + o.date;
+  document.getElementById('sLines').innerHTML =
+    o.items.map(it => `<div class="l"><span>${it.qty} x ${it.name}</span><span>${money(it.total)}</span></div>`).join('') +
+    `<div class="l" style="font-weight:600"><span>Collected</span><span>${money(o.collected)}</span></div>` +
+    `<div class="l"><span>Supplier total</span><span>${money(o.supplierTotal)}</span></div>` +
+    `<div class="l"><span>Still owing</span><span>${money(o.owing)}</span></div>` +
+    `<div class="l" style="font-weight:600"><span>Your profit</span><span>${money(o.profit)}</span></div>`;
+  const set = (id, v) => document.getElementById(id).value = (v || v === 0) ? v : '';
+  set('sPostage', o.postage); set('sDiscount', o.discount); set('sShipping', o.shipping);
+  set('sDeposit', o.deposit); set('sDepositDate', o.depositDate);
+  set('sFinal', o.finalPaid); set('sFinalDate', o.finalDate);
+  document.getElementById('sStatus').value = o.status || 'Pending';
+  document.getElementById('sNotes').value = o.notes || '';
+  document.getElementById('sMsg').className = 'msg';
+  document.getElementById('sheet').classList.add('on');
+  document.getElementById('sheetbg').classList.add('on');
+}
+function closeSheet(){
+  document.getElementById('sheet').classList.remove('on');
+  document.getElementById('sheetbg').classList.remove('on');
+}
+document.getElementById('sClose').addEventListener('click', closeSheet);
+document.getElementById('sheetbg').addEventListener('click', closeSheet);
+
+document.getElementById('sSave').addEventListener('click', async (ev) => {
+  if(!CURRENT) return;
+  ev.target.disabled = true;
+  msg('sMsg', 'Saving...', true);
+  const val = id => document.getElementById(id).value;
+  const r = await call({
+    action: 'updateOrder', row: CURRENT.row,
+    postage: val('sPostage'), discount: val('sDiscount'), shipping: val('sShipping'),
+    deposit: val('sDeposit'), depositDate: val('sDepositDate'),
+    finalPaid: val('sFinal'), finalDate: val('sFinalDate'),
+    status: val('sStatus'), notes: val('sNotes'),
+  }).catch(() => ({ ok:false, error:'Could not reach the sheet' }));
+  if(r.ok){ msg('sMsg', 'Saved.', true); await loadOrders(); setTimeout(closeSheet, 700); }
+  else msg('sMsg', r.error || 'Failed', false);
+  ev.target.disabled = false;
+});
+
+document.getElementById('sDelete').addEventListener('click', async (ev) => {
+  if(!CURRENT) return;
+  if(!confirm('Delete this whole order? This cannot be undone.')) return;
+  ev.target.disabled = true;
+  const r = await call({ action: 'deleteOrder', rows: CURRENT.items.map(i => i.row) })
+    .catch(() => ({ ok:false, error:'Could not reach the sheet' }));
+  if(r.ok){ closeSheet(); loadOrders(); }
+  else msg('sMsg', r.error || 'Failed', false);
+  ev.target.disabled = false;
+});
+
+/* ---------- products ---------- */
+const pSearch = document.getElementById('pSearch');
+const pResults = document.getElementById('pResults');
+pSearch.addEventListener('input', () => {
+  const q = pSearch.value.trim().toLowerCase();
+  if(!q){ pResults.classList.remove('open'); return; }
+  const list = DATA.products.filter(p => p.name.toLowerCase().includes(q)).slice(0, 25);
+  pResults.innerHTML = list.length
+    ? list.map((p,i) => `<div class="res" data-i="${i}"><small>${p.category}</small>${p.name}</div>`).join('')
+    : '<div class="res" style="color:#97836F">Nothing matches</div>';
+  pResults.classList.add('open');
+  [...pResults.querySelectorAll('.res[data-i]')].forEach(el => {
+    el.addEventListener('mousedown', async (ev) => {
+      ev.preventDefault();
+      const p = list[Number(el.dataset.i)];
+      pResults.classList.remove('open');
+      pSearch.value = '';
+      const r = await call({ action: 'product', name: p.name }).catch(() => ({ ok:false }));
+      if(!r.ok) return msg('productMsg', 'Could not load that product', false);
+      const d = r.product;
+      document.getElementById('pName').value = d.name;
+      document.getElementById('pCat').value = d.category;
+      document.getElementById('pTransfer').value = d.transfer || '';
+      document.getElementById('pBase').value = d.base || '';
+      document.getElementById('pCost').value = d.cost || '';
+      document.getElementById('pImage').value = d.image || '';
+      document.getElementById('pShow').value = d.show || 'Yes';
+      msg('productMsg', 'Loaded. Edit and save.', true);
+    });
+  });
+});
+
+document.getElementById('saveProduct').addEventListener('click', async (ev) => {
+  const name = document.getElementById('pName').value.trim();
+  if(!name) return msg('productMsg', 'Add a name', false);
+  ev.target.disabled = true;
+  msg('productMsg', 'Saving...', true);
+  const val = id => document.getElementById(id).value;
+  const r = await call({
+    action: 'saveProduct', name: name, category: val('pCat'),
+    transfer: val('pTransfer'), base: val('pBase'), cost: val('pCost'),
+    image: val('pImage'), show: val('pShow'),
+  }).catch(() => ({ ok:false, error:'Could not reach the sheet' }));
+  if(r.ok){
+    msg('productMsg', 'Saved to the Products tab.', true);
+    if(!DATA.products.some(p => p.name === name)) DATA.products.push({ name: name, category: val('pCat') });
+  } else msg('productMsg', r.error || 'Failed', false);
+  ev.target.disabled = false;
+});
+
 /* ---------- deposit toggle ---------- */
 document.querySelectorAll('#depChips .chip').forEach(c => {
   c.addEventListener('click', () => {
@@ -503,6 +740,7 @@ document.querySelectorAll('.tab').forEach(t => {
     t.classList.add('on');
     document.getElementById('page-' + t.dataset.page).classList.add('on');
     if (t.dataset.page === 'dash') loadDash();
+    if (t.dataset.page === 'orders') loadOrders();
   });
 });
 
