@@ -12,8 +12,10 @@
   }
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--ink);
-    line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:40px}
-  button,input,select,textarea{font-family:inherit;font-size:14px;color:inherit}
+    line-height:1.5;-webkit-font-smoothing:antialiased;
+    padding-bottom:calc(40px + env(safe-area-inset-bottom));overflow-x:hidden}
+  button,input,select,textarea{font-family:inherit;font-size:16px;color:inherit}
+  label{font-size:9.5px}
   .bar{background:var(--beige);padding:16px;text-align:center}
   .bar h1{font-size:13px;letter-spacing:.3em;text-transform:uppercase;font-weight:500}
   .wrap{max-width:660px;margin:0 auto;padding:18px 14px}
@@ -21,11 +23,18 @@
     box-shadow:0 4px 16px rgba(59,47,35,.06)}
   label{display:block;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
     color:var(--muted);margin-bottom:5px;font-weight:500}
-  input,select,textarea{width:100%;padding:10px 11px;border:1px solid var(--line);
-    border-radius:10px;background:var(--white);outline:none}
+  input,select,textarea{width:100%;max-width:100%;padding:10px 11px;
+    border:1px solid var(--line);border-radius:10px;background:var(--white);
+    outline:none;-webkit-appearance:none;appearance:none;box-sizing:border-box}
+  select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
+    linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:30px}
+  input[type=date]{min-height:42px}
+  textarea{resize:vertical}
   input:focus,select:focus,textarea:focus{border-color:var(--ink)}
-  .row{display:flex;gap:10px}
-  .row>*{flex:1}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row>*{flex:1 1 140px;min-width:0}
   .field{margin-bottom:12px}
   .item{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;
     background:#FDFBF8;position:relative}
@@ -45,7 +54,11 @@
   .hint{font-size:11px;color:var(--muted);margin-top:8px}
   .money{position:relative}
   .money input{padding-left:24px}
-  .money .sign{position:absolute;left:11px;top:31px;color:var(--muted);font-size:14px;pointer-events:none}
+  .money{display:flex;flex-direction:column}
+  .money .wrap{position:relative}
+  .money .sign{position:absolute;left:11px;top:50%;transform:translateY(-50%);
+    color:var(--muted);font-size:15px;pointer-events:none}
+  .money input{padding-left:24px}
   .pick{position:relative}
   .pick input{padding-right:30px}
   .clear{position:absolute;right:8px;top:29px;border:none;background:transparent;
@@ -53,7 +66,7 @@
   .results{background:var(--white);border:1px solid var(--line);border-radius:12px;
     margin-top:8px;max-height:250px;overflow-y:auto;display:none}
   .results.open{display:block}
-  .res{padding:9px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--line)}
+  .res{padding:9px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
   .res:last-child{border-bottom:none}
   .res:hover,.res.on{background:#F4EBDF}
   .res small{display:block;color:var(--muted);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
@@ -62,6 +75,7 @@
     font-size:10.5px;cursor:pointer;white-space:nowrap}
   .chip.on{background:var(--ink);color:var(--cream);border-color:var(--ink)}
   .chip .n{opacity:.55;margin-left:4px;font-size:9.5px}
+  .picked span{overflow-wrap:anywhere}
   .picked{font-size:13px;font-weight:500;padding:9px 11px;border:1px solid var(--ink);
     border-radius:10px;background:#FDFBF8;display:flex;justify-content:space-between;align-items:center;gap:8px}
   .picked button{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:14px}
@@ -77,14 +91,16 @@
   .stat .k{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
   .stat .v{font-size:19px;font-weight:600;margin-top:3px}
   .stat.wide{grid-column:1/-1;background:#F4EBDF}
-  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed}
+  td{overflow-wrap:anywhere}
   th{text-align:left;font-size:9px;letter-spacing:.16em;text-transform:uppercase;
     color:var(--muted);padding:6px 4px;font-weight:500}
   td{padding:7px 4px;border-top:1px solid var(--line)}
   td.r,th.r{text-align:right}
   .olist .o{background:var(--white);border-radius:14px;padding:12px 14px;margin-bottom:9px;
     box-shadow:0 3px 12px rgba(59,47,35,.06);cursor:pointer}
-  .o .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .o .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .o .who{overflow-wrap:anywhere}
   .o .who{font-weight:500;font-size:13.5px}
   .o .when{font-size:10.5px;color:var(--muted)}
   .o .line{font-size:11.5px;color:var(--muted);margin-top:3px}
@@ -95,14 +111,16 @@
   .sheetbg{position:fixed;inset:0;background:rgba(59,47,35,.4);z-index:60;display:none}
   .sheetbg.on{display:block}
   .sheet{position:fixed;left:0;right:0;bottom:0;z-index:61;background:var(--cream);
-    border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;padding:16px 14px 30px;
+    border-radius:20px 20px 0 0;max-height:88vh;overflow-y:auto;
+    padding:16px 14px calc(40px + env(safe-area-inset-bottom));
     display:none;box-shadow:0 -10px 40px rgba(59,47,35,.2)}
   .sheet.on{display:block}
   .sheet .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
   .sheet .head h2{margin:0}
   .x{border:none;background:transparent;font-size:18px;color:var(--muted);cursor:pointer}
   .lines{font-size:12.5px}
-  .lines .l{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line)}
+  .lines .l{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
+  .lines .l span:first-child{overflow-wrap:anywhere}
   .danger{background:#FBE9E7;color:#8C2F39;border:1px solid #F0C9C4}
   h2{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px;font-weight:600}
 </style>
@@ -164,11 +182,11 @@
     <div class="card">
       <h2>Money</h2>
       <div class="row field">
-        <div class="money"><label>Postage charged</label><span class="sign">$</span><input type="number" id="postage" value="15" step="0.01"></div>
-        <div class="money"><label>Discount</label><span class="sign">$</span><input type="number" id="discount" placeholder="0" step="0.01"></div>
+        <div class="money"><label>Postage charged</label><div class="wrap"><span class="sign">$</span><input type="number" id="postage" value="15" step="0.01"></div></div>
+        <div class="money"><label>Discount</label><div class="wrap"><span class="sign">$</span><input type="number" id="discount" placeholder="0" step="0.01"></div></div>
       </div>
       <div class="row field">
-        <div class="money"><label>Supplier shipping</label><span class="sign">$</span><input type="number" id="shipping" placeholder="0" step="0.01"></div>
+        <div class="money"><label>Supplier shipping</label><div class="wrap"><span class="sign">$</span><input type="number" id="shipping" placeholder="0" step="0.01"></div></div>
         <div></div>
       </div>
       <div class="field">
@@ -179,8 +197,8 @@
         </div>
         <div id="depWrap" style="display:none">
           <div class="row">
-            <div class="money"><label>Amount</label><span class="sign">$</span>
-              <input type="number" id="depositAmount" placeholder="0" step="0.01"></div>
+            <div class="money"><label>Amount</label><div class="wrap"><span class="sign">$</span>
+              <input type="number" id="depositAmount" placeholder="0" step="0.01"></div></div>
             <div><label>Date paid</label><input type="date" id="depositDate"></div>
           </div>
         </div>
@@ -209,7 +227,7 @@
         <h2>New expense</h2>
         <div class="row field">
           <div><label>Date</label><input type="date" id="eDate"></div>
-          <div class="money"><label>Amount</label><span class="sign">$</span><input type="number" id="eAmount" step="0.01" placeholder="0.00"></div>
+          <div class="money"><label>Amount</label><div class="wrap"><span class="sign">$</span><input type="number" id="eAmount" step="0.01" placeholder="0.00"></div></div>
         </div>
         <div class="field"><label>Category</label><select id="eCat"></select></div>
         <div class="field"><label>Description</label><input type="text" id="eDesc" placeholder="Linktree subscription"></div>
@@ -231,8 +249,8 @@
         <div class="field"><label>Address</label><input type="text" id="cAddress" placeholder="12 Example Street"></div>
         <div class="row field">
           <div><label>Suburb</label><input type="text" id="cSuburb"></div>
-          <div style="max-width:100px"><label>State</label><select id="cState"></select></div>
-          <div style="max-width:110px"><label>Postcode</label><input type="text" id="cPostcode"></div>
+          <div style="flex:0 1 100px"><label>State</label><select id="cState"></select></div>
+          <div style="flex:0 1 110px"><label>Postcode</label><input type="text" id="cPostcode"></div>
         </div>
         <div class="field"><label>Notes</label><textarea id="cNotes" rows="2" placeholder="Optional"></textarea></div>
         <button class="btn dark" id="saveContact">Save contact</button>
@@ -260,14 +278,14 @@
         <div class="field"><label>Name</label><input type="text" id="pName" placeholder="Gucci Marmont Mini Bag"></div>
         <div class="field"><label>Category</label><select id="pCat"></select></div>
         <div class="row field">
-          <div class="money"><label>Transfer price</label><span class="sign">$</span>
-            <input type="number" id="pTransfer" step="0.01" placeholder="0"></div>
-          <div class="money"><label>Base price</label><span class="sign">$</span>
-            <input type="number" id="pBase" step="0.01" placeholder="0"></div>
+          <div class="money"><label>Transfer price</label><div class="wrap"><span class="sign">$</span>
+            <input type="number" id="pTransfer" step="0.01" placeholder="0"></div></div>
+          <div class="money"><label>Base price</label><div class="wrap"><span class="sign">$</span>
+            <input type="number" id="pBase" step="0.01" placeholder="0"></div></div>
         </div>
         <div class="row field">
-          <div class="money"><label>Cost price</label><span class="sign">$</span>
-            <input type="number" id="pCost" step="0.01" placeholder="0"></div>
+          <div class="money"><label>Cost price</label><div class="wrap"><span class="sign">$</span>
+            <input type="number" id="pCost" step="0.01" placeholder="0"></div></div>
           <div><label>Show in catalogue</label>
             <select id="pShow"><option>Yes</option><option>No</option></select></div>
         </div>
@@ -300,18 +318,18 @@
   <div class="card">
     <h2>Money</h2>
     <div class="row field">
-      <div class="money"><label>Postage charged</label><span class="sign">$</span><input type="number" id="sPostage" step="0.01"></div>
-      <div class="money"><label>Discount</label><span class="sign">$</span><input type="number" id="sDiscount" step="0.01"></div>
+      <div class="money"><label>Postage charged</label><div class="wrap"><span class="sign">$</span><input type="number" id="sPostage" step="0.01"></div></div>
+      <div class="money"><label>Discount</label><div class="wrap"><span class="sign">$</span><input type="number" id="sDiscount" step="0.01"></div></div>
     </div>
     <div class="field">
-      <div class="money"><label>Supplier shipping</label><span class="sign">$</span><input type="number" id="sShipping" step="0.01"></div>
+      <div class="money"><label>Supplier shipping</label><div class="wrap"><span class="sign">$</span><input type="number" id="sShipping" step="0.01"></div></div>
     </div>
     <div class="row field">
-      <div class="money"><label>Deposit paid</label><span class="sign">$</span><input type="number" id="sDeposit" step="0.01"></div>
+      <div class="money"><label>Deposit paid</label><div class="wrap"><span class="sign">$</span><input type="number" id="sDeposit" step="0.01"></div></div>
       <div><label>Deposit date</label><input type="date" id="sDepositDate"></div>
     </div>
     <div class="row field">
-      <div class="money"><label>Final paid</label><span class="sign">$</span><input type="number" id="sFinal" step="0.01"></div>
+      <div class="money"><label>Final paid</label><div class="wrap"><span class="sign">$</span><input type="number" id="sFinal" step="0.01"></div></div>
       <div><label>Final date</label><input type="date" id="sFinalDate"></div>
     </div>
     <div class="field"><label>Status</label>
@@ -407,7 +425,7 @@ function addItem(){
     </div>
     <div class="results open"></div>
     <div class="chosen" style="display:none;margin-top:8px"></div>
-    <div style="max-width:90px;margin-top:10px">
+    <div style="max-width:110px;margin-top:10px">
       <label>Qty</label>
       <input type="number" class="qty" value="1" min="1">
     </div>`;
