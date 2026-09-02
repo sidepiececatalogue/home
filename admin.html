@@ -188,11 +188,12 @@
       <h2>Money</h2>
       <div class="row field">
         <div class="money"><label>Postage charged</label><div class="wrap"><span class="sign">$</span><input type="number" id="postage" value="15" step="0.01"></div></div>
-        <div class="money"><label>Discount</label><div class="wrap"><span class="sign">$</span><input type="number" id="discount" placeholder="0" step="0.01"></div></div>
+        <div class="money"><label>Postage to split</label><div class="wrap"><span class="sign">$</span><input type="number" id="postageShared" value="10" step="0.01"></div></div>
       </div>
+      <div class="hint" style="margin:-6px 0 12px">Postage to split is the part shared 50/50. Anything charged above it stays yours.</div>
       <div class="row field">
         <div class="money"><label>Supplier shipping</label><div class="wrap"><span class="sign">$</span><input type="number" id="shipping" placeholder="0" step="0.01"></div></div>
-        <div></div>
+        <div class="money"><label>Discount</label><div class="wrap"><span class="sign">$</span><input type="number" id="discount" placeholder="0" step="0.01"></div></div>
       </div>
       <div class="field">
         <label>Deposit</label>
@@ -295,10 +296,11 @@
     <h2>Money</h2>
     <div class="row field">
       <div class="money"><label>Postage charged</label><div class="wrap"><span class="sign">$</span><input type="number" id="sPostage" step="0.01"></div></div>
-      <div class="money"><label>Discount</label><div class="wrap"><span class="sign">$</span><input type="number" id="sDiscount" step="0.01"></div></div>
+      <div class="money"><label>Postage to split</label><div class="wrap"><span class="sign">$</span><input type="number" id="sPostageShared" step="0.01"></div></div>
     </div>
-    <div class="field">
+    <div class="row field">
       <div class="money"><label>Supplier shipping</label><div class="wrap"><span class="sign">$</span><input type="number" id="sShipping" step="0.01"></div></div>
+      <div class="money"><label>Discount</label><div class="wrap"><span class="sign">$</span><input type="number" id="sDiscount" step="0.01"></div></div>
     </div>
     <div class="row field">
       <div class="money"><label>Deposit paid</label><div class="wrap"><span class="sign">$</span><input type="number" id="sDeposit" step="0.01"></div></div>
@@ -389,7 +391,7 @@ function start(){
   sel.innerHTML = DATA.sellers.map(s => `<option>${s}</option>`).join('');
   addItem();
   loadDash();
-  ['postage','discount','shipping','depositAmount'].forEach(id =>
+  ['postage','postageShared','discount','shipping','depositAmount'].forEach(id =>
     document.getElementById(id).addEventListener('input', refresh));
 }
 
@@ -542,11 +544,14 @@ function collect(){
 function refresh(){
   const items = collect();
   const n = Number(document.getElementById('postage').value || 0);
+  const ps = Number(document.getElementById('postageShared').value || 0);
   const d = Number(document.getElementById('discount').value || 0);
   const qty = items.reduce((s,i) => s + i.qty, 0);
   document.getElementById('summary').innerHTML =
     `<div><span>Items</span><span>${qty}</span></div>
-     <div><span>Postage</span><span>$${n.toFixed(2)}</span></div>
+     <div><span>Postage charged</span><span>$${n.toFixed(2)}</span></div>
+     <div><span>Split 50/50</span><span>$${ps.toFixed(2)}</span></div>
+     <div><span>You keep</span><span>$${(n - ps).toFixed(2)}</span></div>
      <div><span>Discount</span><span>$${d.toFixed(2)}</span></div>
      <div class="tot"><span>Prices come from the sheet</span><span></span></div>`;
 }
@@ -567,6 +572,7 @@ document.getElementById('save').addEventListener('click', async (ev) => {
     customer: customer,
     items: items,
     postage: document.getElementById('postage').value,
+    postageShared: document.getElementById('postageShared').value,
     discount: document.getElementById('discount').value,
     shipping: document.getElementById('shipping').value,
     deposit: document.getElementById('depositAmount').value,
@@ -584,6 +590,9 @@ document.getElementById('save').addEventListener('click', async (ev) => {
     document.getElementById('notes').value = '';
     document.getElementById('depositAmount').value = '';
     document.getElementById('discount').value = '';
+    document.getElementById('postage').value = 15;
+    document.getElementById('postageShared').value = 10;
+    refresh();
   };
 
   const known = (DATA.customers || []).some(c => c.toLowerCase() === customer.toLowerCase());
@@ -749,7 +758,8 @@ function openOrder(o){
     `<div class="l"><span>Still owing</span><span>${money(o.owing)}</span></div>` +
     `<div class="l" style="font-weight:600"><span>Your profit</span><span>${money(o.profit)}</span></div>`;
   const set = (id, v) => document.getElementById(id).value = (v || v === 0) ? v : '';
-  set('sPostage', o.postage); set('sDiscount', o.discount); set('sShipping', o.shipping);
+  set('sPostage', o.postage); set('sPostageShared', o.postageShared);
+  set('sDiscount', o.discount); set('sShipping', o.shipping);
   set('sDeposit', o.deposit); set('sDepositDate', o.depositDate);
   set('sFinal', o.finalPaid); set('sFinalDate', o.finalDate);
   document.getElementById('sStatus').value = o.status || 'Pending';
@@ -772,7 +782,8 @@ document.getElementById('sSave').addEventListener('click', async (ev) => {
   const val = id => document.getElementById(id).value;
   const r = await call({
     action: 'updateOrder', row: CURRENT.row,
-    postage: val('sPostage'), discount: val('sDiscount'), shipping: val('sShipping'),
+    postage: val('sPostage'), postageShared: val('sPostageShared'),
+    discount: val('sDiscount'), shipping: val('sShipping'),
     deposit: val('sDeposit'), depositDate: val('sDepositDate'),
     finalPaid: val('sFinal'), finalDate: val('sFinalDate'),
     status: val('sStatus'), notes: val('sNotes'),
