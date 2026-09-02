@@ -64,6 +64,7 @@
   .pick input{padding-right:30px}
   .clear{position:absolute;right:8px;top:29px;border:none;background:transparent;
     color:var(--muted);cursor:pointer;font-size:14px;display:none}
+  #custClear{top:50%;transform:translateY(-50%)}
   .results{background:var(--white);border:1px solid var(--line);border-radius:12px;
     margin-top:8px;max-height:250px;overflow-y:auto;display:none}
   .results.open{display:block}
@@ -578,6 +579,8 @@ document.getElementById('save').addEventListener('click', async (ev) => {
     document.getElementById('items').innerHTML = '';
     addItem();
     document.getElementById('customer').value = '';
+    document.getElementById('custClear').style.display = 'none';
+    document.getElementById('custHint').textContent = '';
     document.getElementById('notes').value = '';
     document.getElementById('depositAmount').value = '';
     document.getElementById('discount').value = '';
@@ -616,6 +619,91 @@ document.getElementById('save').addEventListener('click', async (ev) => {
   ev.target.disabled = false;
 });
 
+
+/* ---------- customer picker ---------- */
+(function () {
+  const input   = document.getElementById('customer');
+  const results = document.getElementById('custResults');
+  const clear   = document.getElementById('custClear');
+  const hint    = document.getElementById('custHint');
+  let marked = -1;
+
+  const matches = () => {
+    const words = input.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    return (DATA.customers || []).filter(c => {
+      if (!words.length) return true;
+      const hay = String(c).toLowerCase();
+      return words.every(w => hay.includes(w));
+    }).slice(0, 40);
+  };
+
+  const say = () => {
+    const v = input.value.trim();
+    if (!v) { hint.textContent = ''; return; }
+    const known = (DATA.customers || []).some(c => String(c).toLowerCase() === v.toLowerCase());
+    hint.textContent = known
+      ? 'Saved contact'
+      : 'New name. It gets added to Contacts when you save.';
+  };
+
+  const pick = (name) => {
+    input.value = name;
+    results.classList.remove('open');
+    clear.style.display = 'block';
+    say();
+  };
+
+  const draw = () => {
+    const list = matches();
+    marked = -1;
+    if (!list.length) {
+      results.innerHTML = '<div class="res" style="color:#97836F">No match. This will be saved as a new contact.</div>';
+    } else {
+      results.innerHTML = list.map((c, i) => `<div class="res" data-i="${i}">${c}</div>`).join('');
+      [...results.querySelectorAll('.res[data-i]')].forEach(el => {
+        el.addEventListener('mousedown', ev => {
+          ev.preventDefault();
+          pick(list[Number(el.dataset.i)]);
+        });
+      });
+    }
+    results.classList.add('open');
+  };
+
+  input.addEventListener('focus', draw);
+  input.addEventListener('input', () => {
+    clear.style.display = input.value ? 'block' : 'none';
+    draw(); say();
+  });
+  input.addEventListener('blur', () => setTimeout(() => results.classList.remove('open'), 150));
+  input.addEventListener('keydown', ev => {
+    const items = [...results.querySelectorAll('.res[data-i]')];
+    if (ev.key === 'Escape') { results.classList.remove('open'); return; }
+    if (!items.length) return;
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+      ev.preventDefault();
+      marked += (ev.key === 'ArrowDown' ? 1 : -1);
+      if (marked < 0) marked = items.length - 1;
+      if (marked >= items.length) marked = 0;
+      items.forEach(el => el.classList.remove('on'));
+      items[marked].classList.add('on');
+      items[marked].scrollIntoView({ block: 'nearest' });
+    }
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      const list = matches();
+      if (list.length) pick(list[marked >= 0 ? marked : 0]);
+      results.classList.remove('open');
+    }
+  });
+  clear.addEventListener('click', () => {
+    input.value = '';
+    clear.style.display = 'none';
+    hint.textContent = '';
+    input.focus();
+    draw();
+  });
+})();
 
 /* ---------- orders ---------- */
 let ORDERS = [], CURRENT = null;
