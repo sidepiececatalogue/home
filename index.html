@@ -9,8 +9,20 @@
 <link rel="preconnect" href="https://script.google.com">
 <link rel="preconnect" href="https://lh3.googleusercontent.com">
 <script>
+/* ---------------------------------------------------------------
+   WHERE THE SHOP GETS ITS PRODUCTS
+
+   FEED_CSV_URL  the fast one. Paste the "Publish to web" link for the
+                 Feed tab here. Google serves it in under a second.
+   SHEET_URL     the Apps Script link. Slower, used as a backup if the
+                 fast one is empty or fails.
+   --------------------------------------------------------------- */
+const FEED_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSeU0nOuYEPZeO0FHt2fFyuPU-hi8FuLbtadZKijrp4HLuCN9mLsZs7ibw9YIM0hcdGC4cHlIFp4YiX/pub?gid=1063364666&single=true&output=csv';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwL0Fx-Fpb1Sq1ye5opnojLpb5ceX6ZQOLnnNf2IaQX3zUr7OCXwe4ZIEUpK3w6gGaclA/exec';
+
 /* start fetching the products immediately, before the rest of the page parses */
-window.__feedText = fetch('https://script.google.com/macros/s/AKfycbwL0Fx-Fpb1Sq1ye5opnojLpb5ceX6ZQOLnnNf2IaQX3zUr7OCXwe4ZIEUpK3w6gGaclA/exec')
+window.__feedUrl = FEED_CSV_URL || SHEET_URL;
+window.__feedText = fetch(window.__feedUrl)
   .then(r => r.ok ? r.text() : null).catch(() => null);
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,200;0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
@@ -518,7 +530,7 @@ window.__feedText = fetch('https://script.google.com/macros/s/AKfycbwL0Fx-Fpb1Sq
    (e.g. Netlify). Opened straight from your computer, browsers
    block it and the retry message shows instead.
 ================================================================= */
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwL0Fx-Fpb1Sq1ye5opnojLpb5ceX6ZQOLnnNf2IaQX3zUr7OCXwe4ZIEUpK3w6gGaclA/exec';
+/* SHEET_URL and FEED_CSV_URL are set at the very top of the page */
 
 /* WhatsApp number: country code + number, no + or spaces (e.g. 61412345678).
    Leave empty for now — the button will open WhatsApp's contact picker instead. */
@@ -679,7 +691,7 @@ function renderGrid(){
     const c = CATS[p.category];
     const card = document.createElement('div');
     card.className = 'card';
-    card.style.animationDelay = (i * 45) + 'ms';
+    card.style.animationDelay = (Math.min(i, 12) * 45) + 'ms';
 
     const photo = p.image
       ? `<img class="card-photo" data-src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" decoding="async"
@@ -926,11 +938,22 @@ document.getElementById('mAdd').addEventListener('click', e => {
 });
 renderCart();
 
-/* ---------- load products: sheet link, then local Excel, then fallback ---------- */
+/* the CSV parser loads in the background. Wait for it if it is not here yet. */
+function whenPapa(){
+  return new Promise(res => {
+    if(typeof Papa !== 'undefined') return res();
+    const tag = document.querySelector('script[src*="papaparse"]');
+    if(tag) tag.addEventListener('load', () => res(), { once:true });
+    document.addEventListener('DOMContentLoaded', () => res(), { once:true });
+    setTimeout(res, 5000);
+  });
+}
+
+/* ---------- load products: fast published tab, then script, then local Excel ---------- */
 async function loadRemote(url){
   try{
     let text = null;
-    if(url === SHEET_URL && window.__feedText){
+    if(url === window.__feedUrl && window.__feedText){
       text = await window.__feedText;
     }
     if(text == null){
@@ -944,6 +967,7 @@ async function loadRemote(url){
       raw = JSON.parse(text);                       /* Apps Script JSON feed */
       if(!Array.isArray(raw)) raw = raw.products || [];
     }else{
+      await whenPapa();
       if(typeof Papa === 'undefined') return false;
       raw = Papa.parse(text, { header:true, skipEmptyLines:true }).data;   /* published CSV */
     }
@@ -1000,7 +1024,7 @@ function paint(){
 
 async function init(){
   const fromUrl = new URLSearchParams(location.search).get('sheet');
-  const url = fromUrl || SHEET_URL;
+  const urls = fromUrl ? [fromUrl] : [FEED_CSV_URL, SHEET_URL].filter(Boolean);
 
   /* repeat visitor: paint instantly from the last visit's copy */
   let painted = false;
@@ -1018,7 +1042,10 @@ async function init(){
   if(!painted) startLoader();
 
   let loaded = false;
-  if(url) loaded = await loadRemote(url);
+  for(const u of urls){
+    loaded = await loadRemote(u);
+    if(loaded) break;
+  }
   if(!loaded) loaded = await loadXlsx();
 
   stopLoader();
