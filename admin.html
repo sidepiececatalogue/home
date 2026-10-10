@@ -8,24 +8,26 @@
 <style>
   :root{
     --cream:#FBF8F3; --white:#fff; --ink:#3B2F23; --muted:#97836F;
-    --beige:#E1C9B3; --line:rgba(59,47,35,.12); --green:#25D366;
+    --beige:#E1C9B3; --sand:#F4EBDF; --line:rgba(59,47,35,.12);
+    --red:#8C2F39; --redbg:#FBE9E7; --green:#2C6B3A; --greenbg:#EAF6EC;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--ink);
     line-height:1.5;-webkit-font-smoothing:antialiased;
     padding-bottom:calc(40px + env(safe-area-inset-bottom));overflow-x:hidden}
+  body.noscroll{overflow:hidden}
   button,input,select,textarea{font-family:inherit;font-size:16px;color:inherit}
-  label{font-size:9.5px}
   .bar{background:var(--beige);padding:16px;text-align:center}
   .bar h1{font-size:13px;letter-spacing:.3em;text-transform:uppercase;font-weight:500}
   .wrap{max-width:660px;margin:0 auto;padding:18px 14px}
   .card{background:var(--white);border-radius:16px;padding:16px;margin-bottom:14px;
     box-shadow:0 4px 16px rgba(59,47,35,.06)}
+  h2{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px;font-weight:600}
   label{display:block;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
     color:var(--muted);margin-bottom:5px;font-weight:500}
   input,select,textarea{width:100%;max-width:100%;padding:10px 11px;
     border:1px solid var(--line);border-radius:10px;background:var(--white);
-    outline:none;-webkit-appearance:none;appearance:none;box-sizing:border-box}
+    outline:none;-webkit-appearance:none;appearance:none}
   select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
     linear-gradient(135deg,var(--muted) 50%,transparent 50%);
     background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;
@@ -36,95 +38,132 @@
   .row{display:flex;gap:10px;flex-wrap:wrap}
   .row>*{flex:1 1 140px;min-width:0}
   .field{margin-bottom:12px}
-  .item{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;
-    background:#FDFBF8;position:relative}
-  .item .del{position:absolute;top:8px;right:8px;width:24px;height:24px;border:none;
-    background:transparent;color:var(--muted);cursor:pointer;font-size:15px}
   .btn{width:100%;padding:13px;border:none;border-radius:999px;cursor:pointer;
     font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:500}
   .btn.dark{background:var(--ink);color:var(--cream)}
   .btn.ghost{background:transparent;border:1px solid var(--ink);color:var(--ink)}
+  .btn.danger{background:var(--redbg);color:var(--red);border:1px solid #F0C9C4}
   .btn:disabled{opacity:.45;cursor:default}
+  .btns{display:flex;gap:8px;margin-top:8px}
   .msg{padding:11px;border-radius:10px;font-size:12.5px;margin-top:12px;display:none}
-  .msg.ok{background:#EAF6EC;color:#2C6B3A;display:block}
-  .msg.err{background:#FBE9E7;color:#8C2F39;display:block}
-  .summary{background:#F4EBDF;border-radius:12px;padding:12px 14px;font-size:13px}
-  .summary div{display:flex;justify-content:space-between;gap:12px;padding:2px 0}
-  .summary span:last-child{white-space:nowrap}
-  .summary .tot{border-top:1px solid var(--line);margin-top:6px;padding-top:7px;font-weight:600}
+  .msg.ok{background:var(--greenbg);color:var(--green);display:block}
+  .msg.err{background:var(--redbg);color:var(--red);display:block}
   .hint{font-size:11px;color:var(--muted);margin-top:8px}
-  .money{position:relative}
-  .money input{padding-left:24px}
-  .money{display:flex;flex-direction:column}
-  .money .wrap{position:relative}
+  .warn{font-size:11.5px;color:var(--red);background:var(--redbg);border-radius:8px;
+    padding:6px 9px;margin-top:8px;line-height:1.4}
+
+  /* money boxes with a $ in front */
+  .money .mw{position:relative}
   .money .sign{position:absolute;left:11px;top:50%;transform:translateY(-50%);
     color:var(--muted);font-size:15px;pointer-events:none}
   .money input{padding-left:24px}
+
+  /* search pickers */
   .pick{position:relative}
   .pick input{padding-right:30px}
   .clear{position:absolute;right:8px;top:29px;border:none;background:transparent;
     color:var(--muted);cursor:pointer;font-size:14px;display:none}
-  #custClear{top:50%;transform:translateY(-50%)}
+  .clear.mid{top:50%;transform:translateY(-50%)}
   .results{background:var(--white);border:1px solid var(--line);border-radius:12px;
-    margin-top:8px;max-height:250px;overflow-y:auto;display:none}
+    margin-top:8px;max-height:250px;overflow-y:auto;display:none;-webkit-overflow-scrolling:touch}
+  .results.prods{max-height:310px}
   .results.open{display:block}
   .res{padding:9px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
   .res:last-child{border-bottom:none}
-  .res:hover,.res.on{background:#F4EBDF}
+  .res:hover,.res.on{background:var(--sand)}
   .res small{display:block;color:var(--muted);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+  .res.p{display:flex;align-items:center;gap:10px;padding:8px 10px}
+  .res .txt{flex:1;min-width:0;line-height:1.35}
+  .res .pr{font-weight:600;white-space:nowrap;font-size:13px}
+  .res .pr.no{font-weight:500;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--red)}
   .chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
   .chip{padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--white);
     font-size:10.5px;cursor:pointer;white-space:nowrap}
   .chip.on{background:var(--ink);color:var(--cream);border-color:var(--ink)}
   .chip .n{opacity:.55;margin-left:4px;font-size:9.5px}
-  .picked span{overflow-wrap:anywhere}
-  .picked{font-size:13px;font-weight:500;padding:9px 11px;border:1px solid var(--ink);
-    border-radius:10px;background:#FDFBF8;display:flex;justify-content:space-between;align-items:center;gap:8px}
-  .picked button{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:14px}
+
+  /* product photos */
+  .ph{width:44px;height:44px;border-radius:9px;background:var(--sand);flex:0 0 auto;overflow:hidden;
+    position:relative;display:flex;align-items:center;justify-content:center;
+    color:var(--muted);font-size:15px;font-weight:500}
+  .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--sand)}
+  .ph.big{width:68px;height:68px;border-radius:11px;font-size:22px}
+
+  /* one item on an order */
+  .item{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;
+    background:#FDFBF8;position:relative}
+  .item>.del{position:absolute;top:6px;right:6px;width:30px;height:30px;border:none;
+    background:transparent;color:var(--muted);cursor:pointer;font-size:15px;z-index:2}
+  .one>.item>.del{display:none}
+  .item .finder{padding-right:22px}
+  .one>.item .finder{padding-right:0}
+  .pc{display:flex;gap:12px;align-items:flex-start;padding-right:26px}
+  .pc .info{flex:1;min-width:0}
+  .pc .nm{font-weight:500;font-size:13.5px;overflow-wrap:anywhere;line-height:1.35}
+  .pc .sub{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+  .pc .each{font-size:13px;margin-top:4px}
+  .qm{display:flex;gap:10px;margin-top:12px}
+  .qm>div{flex:0 1 130px;min-width:0}
+  .how{font-size:11.5px;color:var(--muted);margin-top:8px}
+  .chg{margin-top:10px;border:1px solid var(--line);background:var(--white);border-radius:999px;
+    padding:6px 13px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+
+  /* live numbers */
+  .summary{background:var(--sand);border-radius:12px;padding:12px 14px;font-size:13px;margin-top:4px}
+  .summary .l{display:flex;justify-content:space-between;gap:12px;padding:2px 0}
+  .summary .l span:last-child{white-space:nowrap}
+  .summary .tot{border-top:1px solid var(--line);margin-top:6px;padding-top:7px;font-weight:600}
+
+  /* tabs and pages */
   .tabs{display:flex;gap:6px;justify-content:center;padding:12px 14px 0;flex-wrap:wrap}
   .tab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--white);
     font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;font-weight:500}
   .tab.on{background:var(--ink);color:var(--cream);border-color:var(--ink)}
   .page{display:none}
   .page.on{display:block}
+
+  /* dashboard */
   .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-  .stat{background:var(--white);border-radius:14px;padding:13px 14px;
-    box-shadow:0 4px 16px rgba(59,47,35,.06)}
+  .stat{background:var(--white);border-radius:14px;padding:13px 14px;box-shadow:0 4px 16px rgba(59,47,35,.06)}
   .stat .k{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
   .stat .v{font-size:19px;font-weight:600;margin-top:3px}
-  .stat.wide{grid-column:1/-1;background:#F4EBDF}
+  .stat.wide{grid-column:1/-1;background:var(--sand)}
   table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed}
-  td{overflow-wrap:anywhere}
   th{text-align:left;font-size:9px;letter-spacing:.16em;text-transform:uppercase;
     color:var(--muted);padding:6px 4px;font-weight:500}
-  td{padding:7px 4px;border-top:1px solid var(--line)}
+  td{padding:7px 4px;border-top:1px solid var(--line);overflow-wrap:anywhere}
   td.r,th.r{text-align:right}
-  .olist .o{background:var(--white);border-radius:14px;padding:12px 14px;margin-bottom:9px;
-    box-shadow:0 3px 12px rgba(59,47,35,.06);cursor:pointer}
-  .o .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
-  .o .who{overflow-wrap:anywhere}
-  .o .who{font-weight:500;font-size:13.5px}
-  .o .when{font-size:10.5px;color:var(--muted)}
+  tr.go{cursor:pointer}
+  tr.go:hover td{background:var(--sand)}
+
+  /* lists of orders, contacts, expenses */
+  .list .o{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:12px 14px;
+    margin-bottom:9px;cursor:pointer}
+  .list .o:hover{border-color:var(--ink)}
+  .o .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .o .who{font-weight:500;font-size:13.5px;overflow-wrap:anywhere;min-width:0}
+  .o .when{font-size:10.5px;color:var(--muted);white-space:nowrap}
+  .o .amt{font-weight:600;font-size:13.5px;white-space:nowrap}
   .o .line{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .o .names{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .o .tag{display:inline-block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;
-    padding:3px 8px;border-radius:999px;background:#F4EBDF;margin-top:6px}
-  .o .tag.owed{background:#FBE9E7;color:#8C2F39}
-  .o .tag.done{background:#EAF6EC;color:#2C6B3A}
+    padding:3px 8px;border-radius:999px;background:var(--sand);margin-top:6px}
+  .o .tag.owed{background:var(--redbg);color:var(--red)}
+  .o .tag.done{background:var(--greenbg);color:var(--green)}
+  .card.editing{box-shadow:0 0 0 2px var(--ink)}
+
+  /* order editor */
   .sheetbg{position:fixed;inset:0;background:rgba(59,47,35,.4);z-index:60;display:none}
   .sheetbg.on{display:block}
   .sheet{position:fixed;left:0;right:0;bottom:0;z-index:61;background:var(--cream);
-    border-radius:20px 20px 0 0;max-height:88vh;overflow-y:auto;
+    border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
     padding:16px 14px calc(40px + env(safe-area-inset-bottom));
     display:none;box-shadow:0 -10px 40px rgba(59,47,35,.2)}
   .sheet.on{display:block}
-  .sheet .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .sheet .in{max-width:660px;margin:0 auto}
+  .sheet .head{display:flex;justify-content:space-between;align-items:center;gap:10px}
   .sheet .head h2{margin:0}
-  .x{border:none;background:transparent;font-size:18px;color:var(--muted);cursor:pointer}
-  .lines{font-size:12.5px}
-  .lines .l{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
-  .lines .l span:first-child{overflow-wrap:anywhere}
-  .danger{background:#FBE9E7;color:#8C2F39;border:1px solid #F0C9C4}
-  h2{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px;font-weight:600}
+  .x{border:none;background:transparent;font-size:18px;color:var(--muted);cursor:pointer;padding:4px 6px}
 </style>
 </head>
 <body>
@@ -153,100 +192,89 @@
       <button class="tab" data-page="expense">Expenses</button>
     </div>
 
+    <!-- ============ NEW ORDER ============ -->
     <div class="page" id="page-order">
+      <div class="card">
+        <h2>Order</h2>
+        <div class="row field">
+          <div><label>Date</label><input type="date" id="date"></div>
+          <div><label>Seller</label><select id="seller"></select></div>
+        </div>
+        <div class="field">
+          <label>Customer</label>
+          <div class="pick">
+            <input type="text" id="customer" placeholder="Tap to see your customers, or type a new name" autocomplete="off">
+            <button type="button" class="clear mid" id="custClear" title="Clear">✕</button>
+          </div>
+          <div class="results" id="custResults"></div>
+          <div class="hint" id="custHint" style="margin-top:6px"></div>
+        </div>
+      </div>
 
-    <div class="card">
-      <h2>Order</h2>
-      <div class="row field">
-        <div>
-          <label>Date</label>
-          <input type="date" id="date">
-        </div>
-        <div>
-          <label>Seller</label>
-          <select id="seller"></select>
-        </div>
+      <div class="card">
+        <h2>Items</h2>
+        <div id="items"></div>
+        <button class="btn ghost" id="addItem">Add another item</button>
       </div>
-      <div class="field">
-        <label>Customer</label>
-        <div class="pick">
-          <input type="text" id="customer" placeholder="Tap to see your customers, or type a new name" autocomplete="off">
-          <button type="button" class="clear" id="custClear" title="Clear">✕</button>
-        </div>
-        <div class="results" id="custResults"></div>
-        <div class="hint" id="custHint" style="margin-top:6px"></div>
-      </div>
-    </div>
 
-    <div class="card">
-      <h2>Items</h2>
-      <div id="items"></div>
-      <button class="btn ghost" id="addItem">Add another item</button>
-    </div>
-
-    <div class="card">
-      <h2>Money</h2>
-      <div class="row field">
-        <div class="money"><label>Postage charged</label><div class="wrap"><span class="sign">$</span><input type="number" id="postage" value="15" step="0.01"></div></div>
-        <div class="money"><label>Postage to split</label><div class="wrap"><span class="sign">$</span><input type="number" id="postageShared" value="10" step="0.01"></div></div>
-      </div>
-      <div class="hint" style="margin:-6px 0 12px">Postage to split is the part shared 50/50. Anything charged above it stays yours.</div>
-      <div class="row field">
-        <div class="money"><label>Supplier shipping</label><div class="wrap"><span class="sign">$</span><input type="number" id="shipping" placeholder="0" step="0.01"></div></div>
-        <div class="money"><label>Discount</label><div class="wrap"><span class="sign">$</span><input type="number" id="discount" placeholder="0" step="0.01"></div></div>
-      </div>
-      <div class="field">
-        <label>Deposit</label>
-        <div class="chips" id="depChips">
-          <button type="button" class="chip on" data-dep="no">Not paid yet</button>
-          <button type="button" class="chip" data-dep="yes">Deposit paid</button>
+      <div class="card">
+        <h2>Money</h2>
+        <div class="row field">
+          <div class="money"><label>Postage charged</label><div class="mw"><span class="sign">$</span><input type="number" id="postage" value="15" step="0.01" inputmode="decimal"></div></div>
+          <div class="money"><label>Postage to split</label><div class="mw"><span class="sign">$</span><input type="number" id="postageShared" value="10" step="0.01" inputmode="decimal"></div></div>
         </div>
-        <div id="depWrap" style="display:none">
-          <div class="row">
-            <div class="money"><label>Amount</label><div class="wrap"><span class="sign">$</span>
-              <input type="number" id="depositAmount" placeholder="0" step="0.01"></div></div>
-            <div><label>Date paid</label><input type="date" id="depositDate"></div>
+        <div class="hint" style="margin:-6px 0 12px">Postage to split is the part shared 50/50. Anything charged above it stays yours.</div>
+        <div class="row field">
+          <div class="money"><label>Supplier shipping</label><div class="mw"><span class="sign">$</span><input type="number" id="shipping" placeholder="0" step="0.01" inputmode="decimal"></div></div>
+          <div class="money"><label>Discount</label><div class="mw"><span class="sign">$</span><input type="number" id="discount" placeholder="0" step="0.01" inputmode="decimal"></div></div>
+        </div>
+        <div class="field">
+          <label>Deposit</label>
+          <div class="chips" id="depChips">
+            <button type="button" class="chip on" data-dep="no">Not paid yet</button>
+            <button type="button" class="chip" data-dep="yes">Deposit paid</button>
+          </div>
+          <div id="depWrap" style="display:none">
+            <div class="row">
+              <div class="money"><label>Amount</label><div class="mw"><span class="sign">$</span><input type="number" id="depositAmount" placeholder="0" step="0.01" inputmode="decimal"></div></div>
+              <div><label>Date paid</label><input type="date" id="depositDate"></div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="field">
-        <label>Status</label>
-        <select id="status">
-          <option>Pending</option><option>Ordered</option><option>Deposit Paid</option>
-          <option>Paid in Full</option><option>Shipped</option><option>Delivered</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Notes</label>
-        <textarea id="notes" rows="2" placeholder="Optional"></textarea>
-      </div>
-      <div class="summary" id="summary"></div>
-    </div>
-
-    <button class="btn dark" id="save">Save order</button>
-    <div class="msg" id="saveMsg"></div>
-    <div class="hint">Saves straight into the Sales tab. Formulas work out the rest.</div>
-    </div>
-
-    <div class="page" id="page-expense">
-      <div class="card">
-        <h2>New expense</h2>
-        <div class="row field">
-          <div><label>Date</label><input type="date" id="eDate"></div>
-          <div class="money"><label>Amount</label><div class="wrap"><span class="sign">$</span><input type="number" id="eAmount" step="0.01" placeholder="0.00"></div></div>
+        <div class="field">
+          <label>Status</label>
+          <select id="status">
+            <option>Pending</option><option>Ordered</option><option>Deposit Paid</option>
+            <option>Paid in Full</option><option>Shipped</option><option>Delivered</option>
+          </select>
         </div>
-        <div class="field"><label>Category</label><select id="eCat"></select></div>
-        <div class="field"><label>Description</label><input type="text" id="eDesc" placeholder="Linktree subscription"></div>
-        <div class="field"><label>Paid by</label><select id="ePaid"></select></div>
-        <div class="field"><label>Notes</label><textarea id="eNotes" rows="2" placeholder="Optional"></textarea></div>
-        <button class="btn dark" id="saveExpense">Save expense</button>
-        <div class="msg" id="expenseMsg"></div>
+        <div class="field">
+          <label>Notes</label>
+          <textarea id="notes" rows="2" placeholder="Optional"></textarea>
+        </div>
+        <div class="summary" id="summary"></div>
+      </div>
+
+      <button class="btn dark" id="save">Save order</button>
+      <div class="msg" id="saveMsg"></div>
+      <div class="hint">Saves straight into the Sales tab.</div>
+    </div>
+
+    <!-- ============ CURRENT ORDERS ============ -->
+    <div class="page" id="page-orders">
+      <div class="card">
+        <h2>Orders</h2>
+        <input type="text" id="oSearch" placeholder="Search customer, product or order id" style="margin-bottom:10px">
+        <div class="list" id="olist"><div class="hint">Loading...</div></div>
+        <button class="btn ghost" id="refreshOrders">Refresh</button>
+        <div class="hint">Tap an order to change anything on it.</div>
       </div>
     </div>
 
+    <!-- ============ CONTACTS ============ -->
     <div class="page" id="page-contact">
-      <div class="card">
-        <h2>New contact</h2>
+      <div class="card" id="cCard">
+        <h2 id="cTitle">New contact</h2>
         <div class="field"><label>Full name</label><input type="text" id="cName" placeholder="Jane Citizen"></div>
         <div class="row field">
           <div><label>Phone</label><input type="text" id="cPhone" placeholder="0412 345 678"></div>
@@ -260,383 +288,509 @@
         </div>
         <div class="field"><label>Notes</label><textarea id="cNotes" rows="2" placeholder="Optional"></textarea></div>
         <button class="btn dark" id="saveContact">Save contact</button>
+        <div class="btns" id="cEditBtns" style="display:none">
+          <button class="btn ghost" id="cCancel">Cancel</button>
+        </div>
+        <div class="hint" id="cEditHint" style="display:none">Changing a name here does not change it on past orders.</div>
         <div class="msg" id="contactMsg"></div>
       </div>
-    </div>
-
-    <div class="page" id="page-orders">
       <div class="card">
-        <h2>Recent orders</h2>
-        <input type="text" id="oSearch" placeholder="Search customer or order id" style="margin-bottom:10px">
-        <div class="olist" id="olist"><div class="hint">Loading...</div></div>
-        <button class="btn ghost" id="refreshOrders">Refresh</button>
+        <h2>Your contacts</h2>
+        <input type="text" id="cSearch" placeholder="Search name, phone or suburb" style="margin-bottom:10px">
+        <div class="list" id="clist"><div class="hint">Loading...</div></div>
+        <div class="hint">Tap a contact to change it.</div>
       </div>
     </div>
 
+    <!-- ============ EXPENSES ============ -->
+    <div class="page" id="page-expense">
+      <div class="card" id="eCard">
+        <h2 id="eTitle">New expense</h2>
+        <div class="row field">
+          <div><label>Date</label><input type="date" id="eDate"></div>
+          <div class="money"><label>Amount</label><div class="mw"><span class="sign">$</span><input type="number" id="eAmount" step="0.01" placeholder="0.00" inputmode="decimal"></div></div>
+        </div>
+        <div class="field"><label>Category</label><select id="eCat"></select></div>
+        <div class="field"><label>Description</label><input type="text" id="eDesc" placeholder="Linktree subscription"></div>
+        <div class="field"><label>Paid by</label><select id="ePaid"></select></div>
+        <div class="field"><label>Notes</label><textarea id="eNotes" rows="2" placeholder="Optional"></textarea></div>
+        <button class="btn dark" id="saveExpense">Save expense</button>
+        <div class="btns" id="eEditBtns" style="display:none">
+          <button class="btn ghost" id="eCancel">Cancel</button>
+          <button class="btn danger" id="eDelete">Delete</button>
+        </div>
+        <div class="msg" id="expenseMsg"></div>
+      </div>
+      <div class="card">
+        <h2>Recent expenses</h2>
+        <div class="list" id="xlist"><div class="hint">Loading...</div></div>
+        <div class="hint">Tap an expense to change or delete it.</div>
+      </div>
+    </div>
+
+    <!-- ============ DASHBOARD ============ -->
     <div class="page on" id="page-dash">
       <div class="card">
         <h2>Overview</h2>
         <div class="stats" id="stats"></div>
         <button class="btn ghost" id="refreshDash" style="margin-top:12px">Refresh</button>
       </div>
-      <div class="card"><h2>Recent orders</h2><div id="recent"></div></div>
+      <div class="card">
+        <h2>Recent orders</h2>
+        <div id="recent"></div>
+        <div class="msg" id="dashMsg"></div>
+      </div>
       <div class="card"><h2>By seller</h2><div id="bySeller"></div></div>
       <div class="card"><h2>Top products</h2><div id="topProducts"></div></div>
     </div>
   </div>
 </div>
 
+<!-- ============ ORDER EDITOR ============ -->
 <div class="sheetbg" id="sheetbg"></div>
 <div class="sheet" id="sheet">
-  <div class="head"><h2 id="sTitle">Order</h2><button class="x" id="sClose">✕</button></div>
-  <div class="card">
-    <div id="sLines" class="lines"></div>
-  </div>
-  <div class="card">
-    <h2>Money</h2>
-    <div class="row field">
-      <div class="money"><label>Postage charged</label><div class="wrap"><span class="sign">$</span><input type="number" id="sPostage" step="0.01"></div></div>
-      <div class="money"><label>Postage to split</label><div class="wrap"><span class="sign">$</span><input type="number" id="sPostageShared" step="0.01"></div></div>
+  <div class="in">
+    <div class="head"><h2 id="sTitle">Order</h2><button class="x" id="sClose" title="Close">✕</button></div>
+    <div class="hint" id="sWhere" style="margin:2px 0 12px"></div>
+
+    <div class="card">
+      <h2>Order</h2>
+      <div class="row field">
+        <div><label>Date</label><input type="date" id="sDate"></div>
+        <div><label>Seller</label><select id="sSeller"></select></div>
+      </div>
+      <div class="field">
+        <label>Customer</label>
+        <div class="pick">
+          <input type="text" id="sCustomer" autocomplete="off">
+          <button type="button" class="clear mid" id="sCustClear" title="Clear">✕</button>
+        </div>
+        <div class="results" id="sCustResults"></div>
+        <div class="hint" id="sCustHint" style="margin-top:6px"></div>
+      </div>
     </div>
-    <div class="row field">
-      <div class="money"><label>Supplier shipping</label><div class="wrap"><span class="sign">$</span><input type="number" id="sShipping" step="0.01"></div></div>
-      <div class="money"><label>Discount</label><div class="wrap"><span class="sign">$</span><input type="number" id="sDiscount" step="0.01"></div></div>
+
+    <div class="card">
+      <h2>Items</h2>
+      <div id="sItems"></div>
+      <button class="btn ghost" id="sAddItem">Add another item</button>
     </div>
-    <div class="row field">
-      <div class="money"><label>Deposit paid</label><div class="wrap"><span class="sign">$</span><input type="number" id="sDeposit" step="0.01"></div></div>
-      <div><label>Deposit date</label><input type="date" id="sDepositDate"></div>
+
+    <div class="card">
+      <h2>Money</h2>
+      <div class="row field">
+        <div class="money"><label>Postage charged</label><div class="mw"><span class="sign">$</span><input type="number" id="sPostage" step="0.01" placeholder="0" inputmode="decimal"></div></div>
+        <div class="money"><label>Postage to split</label><div class="mw"><span class="sign">$</span><input type="number" id="sPostageShared" step="0.01" placeholder="0" inputmode="decimal"></div></div>
+      </div>
+      <div class="row field">
+        <div class="money"><label>Supplier shipping</label><div class="mw"><span class="sign">$</span><input type="number" id="sShipping" step="0.01" placeholder="0" inputmode="decimal"></div></div>
+        <div class="money"><label>Discount</label><div class="mw"><span class="sign">$</span><input type="number" id="sDiscount" step="0.01" placeholder="0" inputmode="decimal"></div></div>
+      </div>
+      <div class="row field">
+        <div class="money"><label>Deposit paid</label><div class="mw"><span class="sign">$</span><input type="number" id="sDeposit" step="0.01" placeholder="0" inputmode="decimal"></div></div>
+        <div><label>Deposit date</label><input type="date" id="sDepositDate"></div>
+      </div>
+      <div class="row field">
+        <div class="money"><label>Final paid</label><div class="mw"><span class="sign">$</span><input type="number" id="sFinal" step="0.01" placeholder="0" inputmode="decimal"></div></div>
+        <div><label>Final date</label><input type="date" id="sFinalDate"></div>
+      </div>
+      <div class="field"><label>Status</label><select id="sStatus"></select></div>
+      <div class="field"><label>Notes</label><textarea id="sNotes" rows="2"></textarea></div>
+      <div class="summary" id="sSummary"></div>
     </div>
-    <div class="row field">
-      <div class="money"><label>Final paid</label><div class="wrap"><span class="sign">$</span><input type="number" id="sFinal" step="0.01"></div></div>
-      <div><label>Final date</label><input type="date" id="sFinalDate"></div>
-    </div>
-    <div class="field"><label>Status</label>
-      <select id="sStatus">
-        <option>Pending</option><option>Ordered</option><option>Deposit Paid</option>
-        <option>Paid in Full</option><option>Shipped</option><option>Delivered</option><option>Refunded</option>
-      </select></div>
-    <div class="field"><label>Notes</label><textarea id="sNotes" rows="2"></textarea></div>
+
     <button class="btn dark" id="sSave">Save changes</button>
     <div class="msg" id="sMsg"></div>
+    <button class="btn danger" id="sDelete" style="margin-top:16px">Delete this order</button>
   </div>
-  <button class="btn danger" id="sDelete" style="margin-top:4px">Delete this order</button>
 </div>
 
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbwL0Fx-Fpb1Sq1ye5opnojLpb5ceX6ZQOLnnNf2IaQX3zUr7OCXwe4ZIEUpK3w6gGaclA/exec';
-let PW = '', DATA = { sellers: [], customers: [], products: [] };
 
-async function call(payload, opts){
+let PW = '';
+let DATA = { sellers: [], customers: [], products: [], defaultMarkup: 50, expenseCats: [], states: [] };
+let PMAP = {}, LISTS_AT = 0;
+const FRESH = { orders: false, dash: false };
+const NEW_STATUSES = ['Pending', 'Ordered', 'Deposit Paid', 'Paid in Full', 'Shipped', 'Delivered'];
+const ALL_STATUSES = NEW_STATUSES.concat(['Refunded']);
+
+/* ---------- small helpers ---------- */
+const $ = id => document.getElementById(id);
+const val = id => $(id).value;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
+  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const n0 = v => { const n = Number(v); return isFinite(n) ? n : 0; };
+const isNum = v => v !== null && v !== undefined && String(v).trim() !== '' && isFinite(Number(v));
+const money = v => (n0(v) < -0.004 ? '-$' : '$') +
+  Math.abs(n0(v)).toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const price = v => Number.isInteger(n0(v)) ? (n0(v) < 0 ? '-$' : '$') + Math.abs(n0(v)).toLocaleString('en-AU') : money(v);
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function fmtDate(s) {
+  const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return String(s || '');
+  const y = Number(m[1]);
+  return Number(m[3]) + ' ' + MON[Number(m[2]) - 1] + (y !== new Date().getFullYear() ? ' ' + y : '');
+}
+// today on this phone, not in London, so early mornings never pick yesterday
+function todayYMD() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function shortName(n) {
+  const p = String(n || '').trim().split(/\s+/).filter(Boolean);
+  return p.length < 2 ? (p[0] || '') : p[0] + ' ' + p[p.length - 1][0].toUpperCase();
+}
+function listWords(a) {
+  return a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+}
+function msg(el, text, ok) {
+  const m = $(el);
+  m.textContent = text;
+  m.className = 'msg ' + (ok ? 'ok' : 'err');
+}
+function msgOff(el) { $(el).className = 'msg'; }
+
+// Fills a dropdown. A value the sheet already holds is always kept, even if it is not in the list.
+function fillSelect(sel, list, keep) {
+  const want = keep === undefined ? sel.value : String(keep == null ? '' : keep);
+  const opts = (list || []).map(String);
+  const has = opts.indexOf(want) > -1;
+  const extra = keep !== undefined && !has ? [want] : [];
+  sel.innerHTML = extra.concat(opts).map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+  if (keep !== undefined || has) sel.value = want;
+}
+
+/* ---------- talking to the sheet ---------- */
+async function call(payload, opts) {
   const settings = opts || {};
   const body = JSON.stringify(Object.assign({ password: PW }, payload));
   const tries = settings.retry === false ? 1 : 2;
-  let detail = '';
+  let detail = '', noReply = false;
   for (let attempt = 0; attempt < tries; attempt++) {
     const stop = new AbortController();
-    const timer = setTimeout(() => stop.abort(), settings.timeout || 5000);
+    const timer = setTimeout(() => stop.abort(), settings.timeout || 8000);
     try {
-      const res = await fetch(API, { method:'POST', body: body, redirect:'follow', signal: stop.signal });
-      clearTimeout(timer);
+      const res = await fetch(API, { method: 'POST', body: body, redirect: 'follow', signal: stop.signal });
       const text = await res.text();
+      clearTimeout(timer);
+      noReply = false;
       try {
         const json = JSON.parse(text);
         if (json && typeof json === 'object') return json;
         detail = 'Sheet sent back: ' + String(text).slice(0, 80);
       } catch (e) {
-        const login = /accounts\.google|sign in|<!DOCTYPE/i.test(text);
-        detail = login
+        detail = /accounts\.google|sign in|<!DOCTYPE/i.test(text)
           ? 'The script is not published for Anyone. Check Deploy settings.'
           : 'Unexpected reply from the sheet';
       }
     } catch (e) {
       clearTimeout(timer);
+      noReply = true;
       detail = e.name === 'AbortError' ? 'The sheet took too long to answer' : 'No connection to the sheet';
     }
-    if (attempt === 0 && tries > 1) await new Promise(r => setTimeout(r, 500));
+    if (attempt === 0 && tries > 1) await sleep(500);
   }
-  return { ok: false, error: detail || 'Failed' };
+  return { ok: false, error: detail || 'Failed', noReply: noReply };
 }
 
-function msg(el, text, ok){
-  const m = document.getElementById(el);
-  m.textContent = text;
-  m.className = 'msg ' + (ok ? 'ok' : 'err');
+/* ---------- products ---------- */
+function setLists(r) {
+  DATA = Object.assign({ sellers: [], customers: [], products: [], defaultMarkup: 50, expenseCats: [], states: [] }, r);
+  PMAP = {};
+  DATA.products.forEach(p => {
+    const k = String(p.name).trim().toLowerCase();
+    if (k && !PMAP[k]) PMAP[k] = p;
+  });
+  LISTS_AT = Date.now();
+}
+const prodOf = name => PMAP[String(name || '').trim().toLowerCase()];
+const defMarkup = () => (isNum(DATA.defaultMarkup) ? Number(DATA.defaultMarkup) : 50);
+const markupOf = p => (p && isNum(p.markup) ? Number(p.markup) : defMarkup());
+const hasBase = p => !!p && isNum(p.base);
+const hasCost = p => !!p && isNum(p.cost);
+function shopPrice(p) {
+  if (!p || p.price === undefined || p.price === null) return null;
+  const s = String(p.price).replace(/[$,\s]/g, '');
+  return isNum(s) ? Number(s) : null;
 }
 
-document.getElementById('unlock').addEventListener('click', async () => {
-  PW = document.getElementById('pw').value.trim();
-  if(!PW) return;
-  msg('lockMsg', 'Loading your products, this takes a moment the first time...', true);
-  try{
-    const r = await call({ action: 'lists' }, { timeout: 25000 });
-    if(!r.ok) return msg('lockMsg', r.error || 'Failed', false);
-    DATA = r;
-    try{ localStorage.setItem('sp-pw', PW); }catch(e){}
-    document.getElementById('lock').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    start();
-  }catch(err){ msg('lockMsg', err.message || 'Could not reach the sheet', false); }
-});
-
-function start(){
-  document.getElementById('date').valueAsDate = new Date();
-  document.getElementById('eDate').valueAsDate = new Date();
-  document.getElementById('eCat').innerHTML =
-    (DATA.expenseCats || []).map(c => `<option>${c}</option>`).join('');
-  document.getElementById('ePaid').innerHTML =
-    DATA.sellers.map(s => `<option>${s}</option>`).join('');
-  document.getElementById('cState').innerHTML =
-    (DATA.states || []).map(s => `<option>${s}</option>`).join('');
-  const sel = document.getElementById('seller');
-  sel.innerHTML = DATA.sellers.map(s => `<option>${s}</option>`).join('');
-  addItem();
-  loadDash();
-  ['postage','postageShared','discount','shipping','depositAmount'].forEach(id =>
-    document.getElementById(id).addEventListener('input', refresh));
+// Photos: a Drive file id becomes a Google image link, with a second link to try if the first fails
+const DRIVE_RE = /drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:[^&]*&)*id=|thumbnail\?(?:[^&]*&)*id=)([A-Za-z0-9_-]{10,})/;
+function imgUrl(ref, w) {
+  const r = String(ref || '').trim();
+  if (!r) return '';
+  const m = r.match(DRIVE_RE);
+  if (m) return 'https://lh3.googleusercontent.com/d/' + m[1] + '=w' + w;
+  if (/^https?:\/\//i.test(r)) return r;
+  if (/^[A-Za-z0-9_-]{10,}$/.test(r)) return 'https://lh3.googleusercontent.com/d/' + r + '=w' + w;
+  return '';
+}
+function imgFail(el) {
+  if (!el.dataset.retry && el.src.indexOf('lh3.googleusercontent') > -1) {
+    el.dataset.retry = 1;
+    const id = el.src.split('/d/')[1].split('=')[0];
+    el.src = 'https://drive.google.com/thumbnail?id=' + id + '&sz=w' + (el.dataset.w || 200);
+  } else {
+    el.remove();   // the first letter of the name shows instead
+  }
+}
+function photo(p, big) {
+  const w = big ? 220 : 120;
+  const src = p ? imgUrl(p.img, w) : '';
+  const letter = esc(String(p && p.name ? p.name : '?').replace(/^the\s+/i, '').charAt(0).toUpperCase());
+  return `<div class="ph${big ? ' big' : ''}">${letter}${src
+    ? `<img src="${esc(src)}" alt="" loading="lazy" data-w="${w}" onerror="imgFail(this)">` : ''}</div>`;
 }
 
-function addItem(){
-  const counts = {};
-  DATA.products.forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1; });
-  const cats = Object.keys(counts).sort();
+/* ---------- one item on an order: photo, price, qty, markup ---------- */
+function cardsOf(box) { return Array.prototype.filter.call(box.children, el => el.classList.contains('item')); }
+function oneCheck(box) { box.classList.toggle('one', cardsOf(box).length < 2); }
 
+function itemCard(box, opts) {
+  opts = opts || {};
+  const changed = opts.onChange || function () {};
   const div = document.createElement('div');
   div.className = 'item';
+  div.row = Number(opts.row) || 0;
+  let name = opts.name ? String(opts.name).trim() : '';
+  let cat = '', marked = -1;
+
+  const counts = {};
+  DATA.products.forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1; });
+  const cats = Object.keys(counts).filter(Boolean).sort();
+
   div.innerHTML = `
-    <button class="del" title="Remove">✕</button>
-    <label>Category</label>
-    <div class="chips">
-      <button type="button" class="chip on" data-cat="">All<span class="n">${DATA.products.length}</span></button>
-      ${cats.map(c => `<button type="button" class="chip" data-cat="${c}">${c}<span class="n">${counts[c]}</span></button>`).join('')}
+    <button type="button" class="del" title="Remove this item">✕</button>
+    <div class="finder">
+      <label>Category</label>
+      <div class="chips">
+        <button type="button" class="chip on" data-cat="">All<span class="n">${DATA.products.length}</span></button>
+        ${cats.map(c => `<button type="button" class="chip" data-cat="${esc(c)}">${esc(c)}<span class="n">${counts[c]}</span></button>`).join('')}
+      </div>
+      <div class="pick">
+        <label>Search</label>
+        <input class="search" type="text" placeholder="Type a brand or name" autocomplete="off">
+        <button type="button" class="clear" title="Clear">✕</button>
+      </div>
+      <div class="results prods open"></div>
     </div>
-    <div class="pick">
-      <label>Search</label>
-      <input class="search" type="text" placeholder="Type a brand or name to narrow it down" autocomplete="off">
-      <button type="button" class="clear" title="Clear">✕</button>
-    </div>
-    <div class="results open"></div>
-    <div class="chosen" style="display:none;margin-top:8px"></div>
-    <div style="max-width:110px;margin-top:10px">
-      <label>Qty</label>
-      <input type="number" class="qty" value="1" min="1">
+    <div class="chosen" style="display:none">
+      <div class="pc">
+        <div class="phw"></div>
+        <div class="info"><div class="nm"></div><div class="sub"></div><div class="each"></div></div>
+      </div>
+      <div class="qm">
+        <div><label>Qty</label><input type="number" class="qty" min="1" step="1" inputmode="numeric" value="${Math.max(1, Math.floor(n0(opts.qty)) || 1)}"></div>
+        <div class="money"><label>Markup</label><div class="mw"><span class="sign">$</span><input type="number" class="mk" step="0.01" inputmode="decimal"></div></div>
+      </div>
+      <div class="how"></div>
+      <div class="warns"></div>
+      <button type="button" class="chg">Change product</button>
     </div>`;
-  document.getElementById('items').appendChild(div);
+  box.appendChild(div);
 
-  const search = div.querySelector('.search');
-  const results = div.querySelector('.results');
-  const chosen = div.querySelector('.chosen');
-  const clear = div.querySelector('.clear');
-  let cat = '', picked = null, marked = -1;
+  const q = sel => div.querySelector(sel);
+  const finder = q('.finder'), chosen = q('.chosen'), search = q('.search'), results = q('.results');
+  const clear = q('.clear'), qty = q('.qty'), mk = q('.mk');
 
+  const qtyNum = () => Math.max(1, Math.floor(n0(qty.value)) || 1);
+  const mkNum = () => (isNum(mk.value) ? Number(mk.value) : markupOf(prodOf(name)));
+
+  // every typed word has to appear, and names that match what you typed best come first
   const matches = () => {
-    const q = search.value.trim().toLowerCase();
-    const words = q.split(/\s+/).filter(Boolean);
-    return DATA.products
+    const typed = search.value.trim().toLowerCase().replace(/\s+/g, ' ');
+    const words = typed.split(' ').filter(Boolean);
+    const list = DATA.products
       .filter(p => !cat || p.category === cat)
       .filter(p => {
         if (!words.length) return true;
         const hay = (p.name + ' ' + p.category).toLowerCase();
         return words.every(w => hay.includes(w));
-      })
-      .slice(0, 40);
+      });
+    if (typed) {
+      const score = p => {
+        const n = String(p.name).toLowerCase().replace(/\s+/g, ' ').trim();
+        return n.startsWith(typed) ? 0 : n.includes(typed) ? 1 : 2;
+      };
+      list.sort((a, b) => score(a) - score(b));
+    }
+    return list.slice(0, 40);
   };
 
   const draw = () => {
     const list = matches();
     marked = -1;
-    if (!list.length) {
-      results.innerHTML = '<div class="res" style="color:#97836F">Nothing matches</div>';
-    } else {
-      results.innerHTML = list.map((p, i) =>
-        `<div class="res" data-i="${i}"><small>${p.category}</small>${p.name}</div>`).join('');
-      [...results.querySelectorAll('.res')].forEach(el => {
-        el.addEventListener('mousedown', ev => {
-          ev.preventDefault();
-          choose(list[Number(el.dataset.i)]);
-        });
-      });
-    }
+    results.innerHTML = list.length ? list.map((p, i) => `
+      <div class="res p" data-i="${i}">
+        ${photo(p)}
+        <div class="txt">${esc(p.name)}<small>${esc(p.category)}${p.hidden ? ' · Not on shop' : ''}</small></div>
+        ${hasBase(p) ? `<span class="pr">${price(Number(p.base) + markupOf(p))}</span>` : '<span class="pr no">No price</span>'}
+      </div>`).join('')
+      : '<div class="res" style="color:#97836F">Nothing matches</div>';
+    results.querySelectorAll('.res[data-i]').forEach(el => {
+      el.addEventListener('mousedown', ev => { ev.preventDefault(); choose(list[Number(el.dataset.i)]); });
+    });
     results.classList.add('open');
   };
 
-  const choose = (p) => {
-    picked = p;
-    search.style.display = 'none';
-    div.querySelector('.pick label').style.display = 'none';
-    clear.style.display = 'none';
-    results.classList.remove('open');
-    chosen.style.display = 'block';
-    chosen.innerHTML =
-      `<div class="picked"><span>${p.name}</span><button type="button" title="Change">✕</button></div>`;
-    chosen.querySelector('button').addEventListener('click', () => {
-      picked = null;
-      chosen.style.display = 'none';
-      search.style.display = 'block';
-      div.querySelector('.pick label').style.display = 'block';
-      search.value = '';
-      draw();
-      refresh();
-    });
-    refresh();
+  // photo, name and category. Only redrawn when the product changes, so the photo never flickers.
+  const paintHead = () => {
+    const p = prodOf(name);
+    q('.phw').innerHTML = photo(p || { name: name }, true);
+    q('.nm').textContent = p ? p.name : name;
+    q('.sub').textContent = (p ? p.category : (opts.category || '')) + (p && p.hidden ? ' · Not on shop' : '');
   };
 
-  div.getItem = () => picked ? {
-    category: picked.category,
-    name: picked.name,
-    qty: Number(div.querySelector('.qty').value) || 1,
-  } : null;
+  // price, maths and warnings. Redrawn on every key press.
+  const paintNums = () => {
+    const p = prodOf(name), m = mkNum(), n = qtyNum();
+    const each = (hasBase(p) ? Number(p.base) : 0) + m;
+    q('.each').innerHTML = `<b>${money(each)}</b> each` + (n > 1 ? ` · ${money(each * n)} for ${n}` : '');
+    q('.how').textContent = hasBase(p)
+      ? `${price(p.base)} base plus ${price(m)} markup` + (m !== markupOf(p) ? `. Usual markup is ${price(markupOf(p))}.` : '')
+      : '';
+    const w = [];
+    if (!p) {
+      w.push('This name is not on the Products tab, so the sheet cannot price it. Pick it again or fix the name on Products.');
+    } else {
+      if (!hasBase(p)) w.push('Base Price is empty on Products, so the sheet only charges the markup.');
+      if (!hasCost(p)) w.push('Cost Price is empty on Products, so the profit will look too high.');
+      const shop = shopPrice(p);
+      if (shop !== null && hasBase(p) && Math.abs(shop - (Number(p.base) + markupOf(p))) > 0.004) {
+        w.push(`The shop shows ${price(shop)} but Base Price plus Markup is ${price(Number(p.base) + markupOf(p))}. Fix one of them on Products.`);
+      }
+    }
+    q('.warns').innerHTML = w.map(t => `<div class="warn">${esc(t)}</div>`).join('');
+  };
 
-  search.addEventListener('input', () => {
-    clear.style.display = search.value ? 'block' : 'none';
-    draw();
-  });
-  search.addEventListener('focus', draw);
-  search.addEventListener('keydown', (ev) => {
-    const items = [...results.querySelectorAll('.res[data-i]')];
-    if (!items.length) return;
+  const showChosen = () => {
+    finder.style.display = 'none';
+    chosen.style.display = 'block';
+    paintHead();
+    paintNums();
+  };
+
+  const choose = p => {
+    if (!p) return;
+    name = p.name;
+    mk.value = markupOf(p);
+    showChosen();
+    changed();
+  };
+
+  div.getItem = () => {
+    if (!name) return null;
+    const p = prodOf(name);
+    return {
+      row: div.row || undefined,
+      name: p ? p.name : name,
+      category: p ? p.category : (opts.category || ''),
+      qty: qtyNum(),
+      markup: isNum(mk.value) ? Number(mk.value) : '',
+    };
+  };
+  div.hasName = () => !!name;
+  div.repaint = () => { if (name) paintNums(); else draw(); };
+
+  search.addEventListener('input', () => { clear.style.display = search.value ? 'block' : 'none'; draw(); });
+  search.addEventListener('keydown', ev => {
+    const rows = [...results.querySelectorAll('.res[data-i]')];
+    if (!rows.length) return;
     if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
       ev.preventDefault();
-      marked += (ev.key === 'ArrowDown' ? 1 : -1);
-      if (marked < 0) marked = items.length - 1;
-      if (marked >= items.length) marked = 0;
-      items.forEach(el => el.classList.remove('on'));
-      items[marked].classList.add('on');
-      items[marked].scrollIntoView({ block: 'nearest' });
+      marked += ev.key === 'ArrowDown' ? 1 : -1;
+      if (marked < 0) marked = rows.length - 1;
+      if (marked >= rows.length) marked = 0;
+      rows.forEach(el => el.classList.remove('on'));
+      rows[marked].classList.add('on');
+      rows[marked].scrollIntoView({ block: 'nearest' });
     }
     if (ev.key === 'Enter') {
       ev.preventDefault();
-      const list = matches();
-      choose(list[marked >= 0 ? marked : 0]);
+      choose(matches()[marked >= 0 ? marked : 0]);
     }
   });
   clear.addEventListener('click', () => { search.value = ''; clear.style.display = 'none'; search.focus(); draw(); });
-
   div.querySelectorAll('.chip').forEach(chip => {
     chip.addEventListener('click', () => {
       div.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
       chip.classList.add('on');
       cat = chip.dataset.cat;
-      if (picked && cat && picked.category !== cat) {
-        picked = null;
-        chosen.style.display = 'none';
-        search.style.display = 'block';
-        div.querySelector('.pick label').style.display = 'block';
-      }
       search.value = '';
+      clear.style.display = 'none';
       draw();
     });
   });
-
-  div.querySelector('.qty').addEventListener('input', refresh);
-  div.querySelector('.del').addEventListener('click', () => {
-    if (document.querySelectorAll('.item').length > 1) { div.remove(); refresh(); }
+  qty.addEventListener('input', () => { paintNums(); changed(); });
+  mk.addEventListener('input', () => { paintNums(); changed(); });
+  q('.chg').addEventListener('click', () => {
+    name = '';
+    chosen.style.display = 'none';
+    finder.style.display = 'block';
+    search.value = '';
+    clear.style.display = 'none';
+    draw();
+    changed();
   });
-  refresh();
-}
-document.getElementById('addItem').addEventListener('click', addItem);
+  q('.del').addEventListener('click', () => {
+    if (cardsOf(box).length < 2) return;
+    if (div.row && opts.onRemove) opts.onRemove(div.row);
+    div.remove();
+    oneCheck(box);
+    changed();
+  });
 
-function collect(){
-  return [...document.querySelectorAll('.item')]
-    .map(d => d.getItem ? d.getItem() : null)
-    .filter(Boolean);
-}
-
-function refresh(){
-  const items = collect();
-  const n = Number(document.getElementById('postage').value || 0);
-  const ps = Number(document.getElementById('postageShared').value || 0);
-  const d = Number(document.getElementById('discount').value || 0);
-  const qty = items.reduce((s,i) => s + i.qty, 0);
-  document.getElementById('summary').innerHTML =
-    `<div><span>Items</span><span>${qty}</span></div>
-     <div><span>Postage charged</span><span>$${n.toFixed(2)}</span></div>
-     <div><span>Split 50/50</span><span>$${ps.toFixed(2)}</span></div>
-     <div><span>You keep</span><span>$${(n - ps).toFixed(2)}</span></div>
-     <div><span>Discount</span><span>$${d.toFixed(2)}</span></div>
-     <div class="tot"><span>Prices come from the sheet</span><span></span></div>`;
-}
-
-document.getElementById('save').addEventListener('click', async (ev) => {
-  const items = collect();
-  const customer = document.getElementById('customer').value.trim();
-  if(!customer) return msg('saveMsg', 'Add a customer name', false);
-  if(!items.length) return msg('saveMsg', 'Add at least one item', false);
-
-  ev.target.disabled = true;
-  msg('saveMsg', 'Saving...', true);
-
-  const payload = {
-    action: 'addOrder',
-    date: document.getElementById('date').value,
-    seller: document.getElementById('seller').value,
-    customer: customer,
-    items: items,
-    postage: document.getElementById('postage').value,
-    postageShared: document.getElementById('postageShared').value,
-    discount: document.getElementById('discount').value,
-    shipping: document.getElementById('shipping').value,
-    deposit: document.getElementById('depositAmount').value,
-    depositDate: document.getElementById('depositDate').value,
-    status: document.getElementById('status').value,
-    notes: document.getElementById('notes').value,
-  };
-
-  const clearForm = () => {
-    document.getElementById('items').innerHTML = '';
-    addItem();
-    document.getElementById('customer').value = '';
-    document.getElementById('custClear').style.display = 'none';
-    document.getElementById('custHint').textContent = '';
-    document.getElementById('notes').value = '';
-    document.getElementById('depositAmount').value = '';
-    document.getElementById('discount').value = '';
-    document.getElementById('postage').value = 15;
-    document.getElementById('postageShared').value = 10;
-    refresh();
-  };
-
-  const known = (DATA.customers || []).some(c => c.toLowerCase() === customer.toLowerCase());
-  if (!known) {
-    await call({ action: 'addContact', name: customer }).catch(() => {});
-    DATA.customers.push(customer);
-  }
-
-  const r = await call(payload, { retry: false, timeout: 5000 });
-
-  if (r.ok) {
-    window.__freshOrders = true; window.__freshDash = true;
-    msg('saveMsg', `Saved. ${r.added} item${r.added > 1 ? 's' : ''} added.`, true);
-    clearForm();
-    ev.target.disabled = false;
-    return;
-  }
-
-  // No reply came back. It usually saved anyway, so check once, quickly.
-  msg('saveMsg', 'Checking whether it saved...', true);
-  await new Promise(res => setTimeout(res, 600));
-  const check = await call({ action: 'orders' }, { retry: false, timeout: 5000 });
-  const found = check.ok && (check.orders || []).some(o =>
-        String(o.customer).trim().toLowerCase() === customer.toLowerCase() &&
-        o.items.length === items.length);
-  if (found) {
-    window.__freshOrders = true; window.__freshDash = true;
-    msg('saveMsg', 'Saved. It is in the sheet.', true);
-    clearForm();
+  if (name) {
+    mk.value = isNum(opts.markup) ? Number(opts.markup) : markupOf(prodOf(name));
+    showChosen();
   } else {
-    msg('saveMsg', (r.error || 'Did not save') + '. Check the sheet before trying again.', false);
+    draw();
   }
-  ev.target.disabled = false;
-});
+  oneCheck(box);
+  return div;
+}
 
+/* ---------- the money maths, exactly as the Sales tab does it ---------- */
+function calc(items, m) {
+  const r = { qty: 0, total: 0, cost: 0, marks: 0, missing: false };
+  items.forEach(it => {
+    const p = prodOf(it.name);
+    const mk = isNum(it.markup) ? Number(it.markup) : markupOf(p);
+    if (!hasBase(p) || !hasCost(p)) r.missing = true;
+    r.qty += it.qty;
+    r.total += ((hasBase(p) ? Number(p.base) : 0) + mk) * it.qty;
+    r.cost += (hasCost(p) ? Number(p.cost) : 0) * it.qty;
+    r.marks += mk * it.qty;
+  });
+  r.collected = r.total - m.discount + m.postage;
+  r.split = (r.total + m.postageShared - r.marks - r.cost - m.shipping) / 2;
+  r.supplier = r.cost + m.shipping + r.split;
+  r.owing = r.supplier - m.deposit - m.finalPaid;
+  r.profit = r.split + r.marks - m.discount + m.postage - m.postageShared;
+  return r;
+}
+function summaryHTML(r) {
+  if (!r.qty) return '<div class="hint" style="margin:0">Pick a product to see the numbers.</div>';
+  const line = (k, v, cls) => `<div class="l${cls ? ' ' + cls : ''}"><span>${k}</span><span>${v}</span></div>`;
+  return line('Items', r.qty) +
+    line('Items total', money(r.total)) +
+    line('Order collected', money(r.collected), 'tot') +
+    line('Split profit', money(r.split)) +
+    line('Supplier total', money(r.supplier)) +
+    line('Still owing', money(r.owing)) +
+    line('SidePiece profit', money(r.profit), 'tot') +
+    (r.missing ? '<div class="warn">Some prices are missing on Products, so these numbers are short.</div>' : '') +
+    '<div class="hint">Same maths as the Sales tab.</div>';
+}
+function itemsOf(box) { return cardsOf(box).map(d => d.getItem()).filter(Boolean); }
 
-/* ---------- customer picker ---------- */
-(function () {
-  const input   = document.getElementById('customer');
-  const results = document.getElementById('custResults');
-  const clear   = document.getElementById('custClear');
-  const hint    = document.getElementById('custHint');
-  let marked = -1;
-
+/* ---------- customer picker, used on New Order and in the order editor ---------- */
+function customerPicker(input, results, clear, hint) {
+  let marked = -1, quiet = '';
+  const known = v => (DATA.customers || []).some(c => String(c).trim().toLowerCase() === String(v).trim().toLowerCase());
   const matches = () => {
     const words = input.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
     return (DATA.customers || []).filter(c => {
@@ -645,58 +799,49 @@ document.getElementById('save').addEventListener('click', async (ev) => {
       return words.every(w => hay.includes(w));
     }).slice(0, 40);
   };
-
+  // an old order's name that is not in Contacts stays quiet, it only gets added if you change it
   const say = () => {
     const v = input.value.trim();
-    if (!v) { hint.textContent = ''; return; }
-    const known = (DATA.customers || []).some(c => String(c).toLowerCase() === v.toLowerCase());
-    hint.textContent = known
-      ? 'Saved contact'
-      : 'New name. It gets added to Contacts when you save.';
+    hint.textContent = !v ? '' : known(v) ? 'Saved contact'
+      : v === quiet ? '' : 'New name. It gets added to Contacts when you save.';
   };
-
-  const pick = (name) => {
+  const pick = name => {
     input.value = name;
     results.classList.remove('open');
     clear.style.display = 'block';
     say();
   };
-
   const draw = () => {
     const list = matches();
     marked = -1;
-    if (!list.length) {
-      results.innerHTML = '<div class="res" style="color:#97836F">No match. This will be saved as a new contact.</div>';
-    } else {
-      results.innerHTML = list.map((c, i) => `<div class="res" data-i="${i}">${c}</div>`).join('');
-      [...results.querySelectorAll('.res[data-i]')].forEach(el => {
-        el.addEventListener('mousedown', ev => {
-          ev.preventDefault();
-          pick(list[Number(el.dataset.i)]);
-        });
-      });
-    }
+    if (!list.length) { results.innerHTML = ''; results.classList.remove('open'); return; }
+    results.innerHTML = list.map((c, i) => `<div class="res" data-i="${i}">${esc(c)}</div>`).join('');
+    results.querySelectorAll('.res[data-i]').forEach(el => {
+      el.addEventListener('mousedown', ev => { ev.preventDefault(); pick(list[Number(el.dataset.i)]); });
+    });
     results.classList.add('open');
   };
-
-  input.addEventListener('focus', draw);
-  input.addEventListener('input', () => {
-    clear.style.display = input.value ? 'block' : 'none';
-    draw(); say();
+  // a tap anywhere else closes the list
+  document.addEventListener('pointerdown', ev => {
+    if (results.classList.contains('open') && ev.target !== input && !results.contains(ev.target)) {
+      results.classList.remove('open');
+    }
   });
+  input.addEventListener('focus', draw);
+  input.addEventListener('input', () => { clear.style.display = input.value ? 'block' : 'none'; draw(); say(); });
   input.addEventListener('blur', () => setTimeout(() => results.classList.remove('open'), 150));
   input.addEventListener('keydown', ev => {
-    const items = [...results.querySelectorAll('.res[data-i]')];
+    const rows = [...results.querySelectorAll('.res[data-i]')];
     if (ev.key === 'Escape') { results.classList.remove('open'); return; }
-    if (!items.length) return;
+    if (!rows.length) return;
     if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
       ev.preventDefault();
-      marked += (ev.key === 'ArrowDown' ? 1 : -1);
-      if (marked < 0) marked = items.length - 1;
-      if (marked >= items.length) marked = 0;
-      items.forEach(el => el.classList.remove('on'));
-      items[marked].classList.add('on');
-      items[marked].scrollIntoView({ block: 'nearest' });
+      marked += ev.key === 'ArrowDown' ? 1 : -1;
+      if (marked < 0) marked = rows.length - 1;
+      if (marked >= rows.length) marked = 0;
+      rows.forEach(el => el.classList.remove('on'));
+      rows[marked].classList.add('on');
+      rows[marked].scrollIntoView({ block: 'nearest' });
     }
     if (ev.key === 'Enter') {
       ev.preventDefault();
@@ -712,194 +857,289 @@ document.getElementById('save').addEventListener('click', async (ev) => {
     input.focus();
     draw();
   });
-})();
+  return {
+    known: known,
+    set: (name, keepQuiet) => {
+      quiet = keepQuiet ? String(name || '').trim() : '';
+      input.value = name || '';
+      clear.style.display = input.value ? 'block' : 'none';
+      results.classList.remove('open');
+      say();
+    },
+  };
+}
+const CUST = customerPicker($('customer'), $('custResults'), $('custClear'), $('custHint'));
+const SCUST = customerPicker($('sCustomer'), $('sCustResults'), $('sCustClear'), $('sCustHint'));
 
-/* ---------- orders ---------- */
-let ORDERS = [], CURRENT = null;
-
-async function loadOrders(){
-  document.getElementById('olist').innerHTML = '<div class="hint">Loading...</div>';
-  const r = await call({ action: 'orders', fresh: !!window.__freshOrders }, { timeout: 15000 }).catch(() => ({ ok:false }));
-  if(!r.ok){ document.getElementById('olist').innerHTML = '<div class="hint">Could not load</div>'; return; }
-  ORDERS = r.orders || [];
-  drawOrders();
+// A name typed for the first time goes into Contacts too
+async function addContactIfNew(picker, name) {
+  if (picker.known(name)) return;
+  const r = await call({ action: 'addContact', name: name }, { retry: false, timeout: 15000 });
+  if (r.ok || /already exists/i.test(r.error || '')) DATA.customers.push(name);
 }
 
-function drawOrders(){
-  const q = document.getElementById('oSearch').value.trim().toLowerCase();
-  const list = ORDERS.filter(o => !q ||
-    (o.customer + ' ' + o.id).toLowerCase().includes(q));
-  document.getElementById('olist').innerHTML = list.length ? list.map((o, i) => {
-    const tag = o.owing > 0
-      ? `<span class="tag owed">Owing ${money(o.owing)}</span>`
-      : `<span class="tag done">${o.status || 'Settled'}</span>`;
-    return `<div class="o" data-i="${ORDERS.indexOf(o)}">
-      <div class="top"><span class="who">${shortName(o.customer)}</span>
-        <span class="when">${o.date}</span></div>
-      <div class="line">${o.items.length} item${o.items.length>1?'s':''} · ${money(o.collected)} · ${o.seller}</div>
-      ${tag}</div>`;
-  }).join('') : '<div class="hint">No orders yet.</div>';
-  document.querySelectorAll('.o').forEach(el => {
-    el.addEventListener('click', () => openOrder(ORDERS[Number(el.dataset.i)]));
-  });
+/* ---------- new order ---------- */
+function moneyNew() {
+  return {
+    postage: n0(val('postage')), postageShared: n0(val('postageShared')),
+    discount: n0(val('discount')), shipping: n0(val('shipping')),
+    deposit: n0(val('depositAmount')), finalPaid: 0,
+  };
 }
-document.getElementById('oSearch').addEventListener('input', drawOrders);
-document.getElementById('refreshOrders').addEventListener('click', () => {
-  window.__freshOrders = true; loadOrders().then(() => window.__freshOrders = false);
+function refreshNew() { $('summary').innerHTML = summaryHTML(calc(itemsOf($('items')), moneyNew())); }
+['postage', 'postageShared', 'discount', 'shipping', 'depositAmount'].forEach(id =>
+  $(id).addEventListener('input', refreshNew));
+
+$('addItem').addEventListener('click', () => {
+  const d = itemCard($('items'), { onChange: refreshNew });
+  refreshNew();
+  d.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 });
 
-function openOrder(o){
-  CURRENT = o;
-  document.getElementById('sTitle').textContent = shortName(o.customer) + ' · ' + o.date;
-  document.getElementById('sLines').innerHTML =
-    o.items.map(it => `<div class="l"><span>${it.qty} x ${it.name}</span><span>${money(it.total)}</span></div>`).join('') +
-    `<div class="l" style="font-weight:600"><span>Collected</span><span>${money(o.collected)}</span></div>` +
-    `<div class="l"><span>Supplier total</span><span>${money(o.supplierTotal)}</span></div>` +
-    `<div class="l"><span>Still owing</span><span>${money(o.owing)}</span></div>` +
-    `<div class="l" style="font-weight:600"><span>Your profit</span><span>${money(o.profit)}</span></div>`;
-  const set = (id, v) => document.getElementById(id).value = (v || v === 0) ? v : '';
-  set('sPostage', o.postage); set('sPostageShared', o.postageShared);
-  set('sDiscount', o.discount); set('sShipping', o.shipping);
-  set('sDeposit', o.deposit); set('sDepositDate', o.depositDate);
-  set('sFinal', o.finalPaid); set('sFinalDate', o.finalDate);
-  document.getElementById('sStatus').value = o.status || 'Pending';
-  document.getElementById('sNotes').value = o.notes || '';
-  document.getElementById('sMsg').className = 'msg';
-  document.getElementById('sheet').classList.add('on');
-  document.getElementById('sheetbg').classList.add('on');
+function setDeposit(paid) {
+  document.querySelectorAll('#depChips .chip').forEach(x => x.classList.toggle('on', (x.dataset.dep === 'yes') === paid));
+  $('depWrap').style.display = paid ? 'block' : 'none';
+  if (paid && !val('depositDate')) $('depositDate').value = todayYMD();
+  if (!paid) { $('depositAmount').value = ''; $('depositDate').value = ''; }
+  if (paid && val('status') === 'Pending') $('status').value = 'Deposit Paid';
+  refreshNew();
 }
-function closeSheet(){
-  document.getElementById('sheet').classList.remove('on');
-  document.getElementById('sheetbg').classList.remove('on');
-}
-document.getElementById('sClose').addEventListener('click', closeSheet);
-document.getElementById('sheetbg').addEventListener('click', closeSheet);
+document.querySelectorAll('#depChips .chip').forEach(c =>
+  c.addEventListener('click', () => setDeposit(c.dataset.dep === 'yes')));
 
-document.getElementById('sSave').addEventListener('click', async (ev) => {
-  if(!CURRENT) return;
-  ev.target.disabled = true;
+function clearNewOrder() {
+  $('items').innerHTML = '';
+  itemCard($('items'), { onChange: refreshNew });
+  CUST.set('');
+  ['notes', 'discount', 'shipping'].forEach(id => $(id).value = '');
+  $('postage').value = 15;
+  $('postageShared').value = 10;
+  $('status').value = 'Pending';
+  setDeposit(false);
+  refreshNew();
+}
+
+$('save').addEventListener('click', async ev => {
+  const btn = ev.currentTarget;
+  const items = itemsOf($('items'));
+  const customer = val('customer').trim();
+  if (!customer) return msg('saveMsg', 'Add a customer name', false);
+  if (!items.length) return msg('saveMsg', 'Pick at least one product', false);
+
+  btn.disabled = true;
+  msg('saveMsg', 'Saving...', true);
+  const payload = {
+    action: 'addOrder', date: val('date'), seller: val('seller'), customer: customer, items: items,
+    postage: val('postage'), postageShared: val('postageShared'),
+    discount: val('discount'), shipping: val('shipping'),
+    deposit: val('depositAmount'), depositDate: val('depositAmount') ? val('depositDate') : '',
+    status: val('status'), notes: val('notes'),
+  };
+  const done = text => {
+    FRESH.orders = FRESH.dash = true;
+    msg('saveMsg', text, true);
+    clearNewOrder();
+    btn.disabled = false;
+  };
+
+  await addContactIfNew(CUST, customer);
+  const r = await call(payload, { retry: false, timeout: 20000 });
+  if (r.ok) return done(`Saved. ${r.added} item${r.added > 1 ? 's' : ''} added to the Sales tab.`);
+  if (!r.noReply) { msg('saveMsg', r.error || 'Did not save', false); btn.disabled = false; return; }
+
+  // No reply came back. It often saved anyway, so look before saying it failed.
+  msg('saveMsg', 'Checking whether it saved...', true);
+  await sleep(800);
+  const check = await call({ action: 'orders', fresh: true }, { retry: false, timeout: 20000 });
+  const found = check.ok && (check.orders || []).some(o =>
+    String(o.customer).trim().toLowerCase() === customer.toLowerCase() &&
+    o.items.length === items.length && (!payload.date || o.date === payload.date));
+  if (found) return done('Saved. It is in the sheet.');
+  msg('saveMsg', (r.error || 'Did not save') + '. Check the Sales tab before trying again.', false);
+  btn.disabled = false;
+});
+
+/* ---------- current orders ---------- */
+let ORDERS = [];
+
+async function loadOrders(fresh) {
+  $('olist').innerHTML = '<div class="hint">Loading...</div>';
+  const r = await call({ action: 'orders', fresh: !!(fresh || FRESH.orders) }, { timeout: 20000 });
+  if (!r.ok) { $('olist').innerHTML = `<div class="hint">${esc(r.error || 'Could not load')}</div>`; return false; }
+  FRESH.orders = false;
+  ORDERS = r.orders || [];
+  drawOrders();
+  return true;
+}
+
+function drawOrders() {
+  const words = val('oSearch').trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const list = ORDERS.filter(o => {
+    const hay = [o.customer, o.id, o.seller, o.status].concat(o.items.map(i => i.name)).join(' ').toLowerCase();
+    return words.every(w => hay.includes(w));
+  });
+  $('olist').innerHTML = list.length ? list.map(o => {
+    const n = o.items.reduce((s, i) => s + n0(i.qty), 0);
+    const tag = o.owing > 0.004
+      ? `<span class="tag owed">Owing ${money(o.owing)}</span>`
+      : `<span class="tag done">${esc(o.status || 'Settled')}</span>`;
+    return `<div class="o" data-key="${esc(o.key)}">
+      <div class="top"><span class="who">${esc(shortName(o.customer))}</span><span class="when">${esc(fmtDate(o.date))}</span></div>
+      <div class="line">${n} item${n === 1 ? '' : 's'} · ${money(o.collected)}${o.seller ? ' · ' + esc(o.seller) : ''}</div>
+      <div class="line names">${esc(o.items.map(i => i.name).join(', '))}</div>
+      ${tag}</div>`;
+  }).join('') : `<div class="hint">${ORDERS.length ? 'Nothing matches.' : 'No orders yet.'}</div>`;
+  $('olist').querySelectorAll('.o').forEach(el => {
+    el.addEventListener('click', () => {
+      const o = ORDERS.find(x => x.key === el.dataset.key);
+      if (o) openOrder(o);
+    });
+  });
+}
+$('oSearch').addEventListener('input', drawOrders);
+$('refreshOrders').addEventListener('click', () => loadOrders(true));
+
+/* ---------- order editor ---------- */
+let CURRENT = null, REMOVED = [];
+const blankZero = v => (n0(v) === 0 ? '' : v);
+
+function moneyEdit() {
+  return {
+    postage: n0(val('sPostage')), postageShared: n0(val('sPostageShared')),
+    discount: n0(val('sDiscount')), shipping: n0(val('sShipping')),
+    deposit: n0(val('sDeposit')), finalPaid: n0(val('sFinal')),
+  };
+}
+function refreshEdit() { $('sSummary').innerHTML = summaryHTML(calc(itemsOf($('sItems')), moneyEdit())); }
+['sPostage', 'sPostageShared', 'sDiscount', 'sShipping', 'sDeposit', 'sFinal'].forEach(id =>
+  $(id).addEventListener('input', refreshEdit));
+
+function openOrder(o) {
+  ensureLists();
+  CURRENT = o;
+  REMOVED = [];
+  const rows = o.items.map(i => i.row);
+  $('sTitle').textContent = (shortName(o.customer) || 'Order') + (o.date ? ' · ' + fmtDate(o.date) : '');
+  $('sWhere').textContent = 'On the Sales tab, row' + (rows.length > 1 ? 's ' : ' ') + listWords(rows) + '.';
+  $('sDate').value = o.date || '';
+  fillSelect($('sSeller'), DATA.sellers, o.seller);
+  SCUST.set(o.customer, true);
+  $('sItems').innerHTML = '';
+  o.items.forEach(it => itemCard($('sItems'), {
+    row: it.row, name: it.name, category: it.category, qty: it.qty, markup: it.markup,
+    onChange: refreshEdit, onRemove: row => REMOVED.push(row),
+  }));
+  $('sPostage').value = blankZero(o.postage);
+  $('sPostageShared').value = blankZero(o.postageShared);
+  $('sShipping').value = blankZero(o.shipping);
+  $('sDiscount').value = blankZero(o.discount);
+  $('sDeposit').value = blankZero(o.deposit);
+  $('sDepositDate').value = o.depositDate || '';
+  $('sFinal').value = blankZero(o.finalPaid);
+  $('sFinalDate').value = o.finalDate || '';
+  fillSelect($('sStatus'), ALL_STATUSES, o.status || '');
+  $('sNotes').value = o.notes || '';
+  msgOff('sMsg');
+  $('sSave').disabled = false;
+  $('sDelete').disabled = false;
+  refreshEdit();
+  $('sheet').classList.add('on');
+  $('sheetbg').classList.add('on');
+  document.body.classList.add('noscroll');
+  $('sheet').scrollTop = 0;
+}
+function closeSheet() {
+  $('sheet').classList.remove('on');
+  $('sheetbg').classList.remove('on');
+  document.body.classList.remove('noscroll');
+  CURRENT = null;
+}
+$('sClose').addEventListener('click', closeSheet);
+$('sheetbg').addEventListener('click', closeSheet);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && CURRENT) closeSheet(); });
+
+$('sAddItem').addEventListener('click', () => {
+  const d = itemCard($('sItems'), { onChange: refreshEdit, onRemove: row => REMOVED.push(row) });
+  refreshEdit();
+  d.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+});
+
+$('sSave').addEventListener('click', async () => {
+  if (!CURRENT) return;
+  const cards = cardsOf($('sItems'));
+  if (cards.some(d => d.row && !d.hasName())) {
+    return msg('sMsg', 'Pick a product for every item, or tap ✕ to remove it.', false);
+  }
+  const items = itemsOf($('sItems'));
+  const customer = val('sCustomer').trim();
+  if (!customer) return msg('sMsg', 'Add a customer name', false);
+  if (!items.length) return msg('sMsg', 'Pick at least one product. To remove the whole order, use Delete.', false);
+
+  const order = CURRENT;
+  $('sSave').disabled = true;
+  $('sDelete').disabled = true;
   msg('sMsg', 'Saving...', true);
-  const val = id => document.getElementById(id).value;
+  if (customer.toLowerCase() !== String(order.customer || '').trim().toLowerCase()) await addContactIfNew(SCUST, customer);
   const r = await call({
-    action: 'updateOrder', row: CURRENT.row,
+    action: 'saveOrder', key: order.key,
+    date: val('sDate'), seller: val('sSeller'), customer: customer,
+    items: items, removed: REMOVED.slice(),
     postage: val('sPostage'), postageShared: val('sPostageShared'),
-    discount: val('sDiscount'), shipping: val('sShipping'),
+    shipping: val('sShipping'), discount: val('sDiscount'),
     deposit: val('sDeposit'), depositDate: val('sDepositDate'),
     finalPaid: val('sFinal'), finalDate: val('sFinalDate'),
     status: val('sStatus'), notes: val('sNotes'),
-  }).catch(e => ({ ok:false, error: e.message || 'Could not reach the sheet' }));
-  if(r.ok){ msg('sMsg', 'Saved.', true); window.__freshOrders = true; await loadOrders(); window.__freshOrders = false; setTimeout(closeSheet, 700); }
-  else msg('sMsg', r.error || 'Failed', false);
-  ev.target.disabled = false;
-});
+  }, { retry: false, timeout: 20000 });
 
-document.getElementById('sDelete').addEventListener('click', async (ev) => {
-  if(!CURRENT) return;
-  if(!confirm('Delete this whole order? This cannot be undone.')) return;
-  ev.target.disabled = true;
-  const r = await call({ action: 'deleteOrder', rows: CURRENT.items.map(i => i.row) })
-    .catch(e => ({ ok:false, error: e.message || 'Could not reach the sheet' }));
-  if(r.ok){ closeSheet(); loadOrders(); }
-  else msg('sMsg', r.error || 'Failed', false);
-  ev.target.disabled = false;
-});
-
-/* ---------- deposit toggle ---------- */
-document.querySelectorAll('#depChips .chip').forEach(c => {
-  c.addEventListener('click', () => {
-    document.querySelectorAll('#depChips .chip').forEach(x => x.classList.remove('on'));
-    c.classList.add('on');
-    const paid = c.dataset.dep === 'yes';
-    document.getElementById('depWrap').style.display = paid ? 'block' : 'none';
-    if (paid && !document.getElementById('depositDate').value) {
-      document.getElementById('depositDate').valueAsDate = new Date();
-    }
-    if (!paid) document.getElementById('depositAmount').value = '';
-    const st = document.getElementById('status');
-    if (paid && st.value === 'Pending') st.value = 'Deposit Paid';
-  });
-});
-
-/* ---------- tabs ---------- */
-document.querySelectorAll('.tab').forEach(t => {
-  t.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
-    t.classList.add('on');
-    document.getElementById('page-' + t.dataset.page).classList.add('on');
-    if (t.dataset.page === 'dash') loadDash();
-    if (t.dataset.page === 'orders') loadOrders();
-  });
-});
-
-/* ---------- expense ---------- */
-document.getElementById('saveExpense').addEventListener('click', async (ev) => {
-  const amount = document.getElementById('eAmount').value;
-  const desc = document.getElementById('eDesc').value.trim();
-  if (!amount) return msg('expenseMsg', 'Add an amount', false);
-  if (!desc) return msg('expenseMsg', 'Add a description', false);
-  ev.target.disabled = true;
-  msg('expenseMsg', 'Saving...', true);
-  const r = await call({
-    action: 'addExpense',
-    date: document.getElementById('eDate').value,
-    category: document.getElementById('eCat').value,
-    description: desc,
-    amount: amount,
-    paidBy: document.getElementById('ePaid').value,
-    notes: document.getElementById('eNotes').value,
-  }).catch(e => ({ ok: false, error: e.message || 'Could not reach the sheet' }));
+  FRESH.orders = FRESH.dash = true;
   if (r.ok) {
-    msg('expenseMsg', 'Saved to the Expenses tab.', true);
-    ['eAmount','eDesc','eNotes'].forEach(id => document.getElementById(id).value = '');
-  } else msg('expenseMsg', r.error || 'Failed', false);
-  ev.target.disabled = false;
+    msg('sMsg', 'Saved to the sheet.', true);
+    await sleep(700);
+    if (CURRENT === order) closeSheet();
+    loadOrders(true);
+    return;
+  }
+  msg('sMsg', r.noReply
+    ? 'No reply from the sheet. It may still have saved. Close this, tap Refresh and check before trying again.'
+    : (r.error || 'Did not save'), false);
+  $('sSave').disabled = false;
+  $('sDelete').disabled = false;
 });
 
-/* ---------- contact ---------- */
-document.getElementById('saveContact').addEventListener('click', async (ev) => {
-  const name = document.getElementById('cName').value.trim();
-  if (!name) return msg('contactMsg', 'Add a name', false);
-  ev.target.disabled = true;
-  msg('contactMsg', 'Saving...', true);
-  const r = await call({
-    action: 'addContact',
-    name: name,
-    phone: document.getElementById('cPhone').value,
-    email: document.getElementById('cEmail').value,
-    address: document.getElementById('cAddress').value,
-    suburb: document.getElementById('cSuburb').value,
-    state: document.getElementById('cState').value,
-    postcode: document.getElementById('cPostcode').value,
-    notes: document.getElementById('cNotes').value,
-  }).catch(e => ({ ok: false, error: e.message || 'Could not reach the sheet' }));
+$('sDelete').addEventListener('click', async () => {
+  if (!CURRENT) return;
+  if (!confirm('Delete this whole order from the Sales tab? This cannot be undone.')) return;
+  const order = CURRENT;
+  $('sSave').disabled = true;
+  $('sDelete').disabled = true;
+  msg('sMsg', 'Deleting...', true);
+  const r = await call({ action: 'deleteOrder', key: order.key, rows: order.items.map(i => i.row) },
+    { retry: false, timeout: 20000 });
+  FRESH.orders = FRESH.dash = true;
   if (r.ok) {
-    msg('contactMsg', 'Saved. They will show in the customer list.', true);
-    DATA.customers.push(name);
-    ['cName','cPhone','cEmail','cAddress','cSuburb','cPostcode','cNotes']
-      .forEach(id => document.getElementById(id).value = '');
-  } else msg('contactMsg', r.error || 'Failed', false);
-  ev.target.disabled = false;
+    if (CURRENT === order) closeSheet();
+    loadOrders(true);
+    return;
+  }
+  msg('sMsg', r.noReply
+    ? 'No reply from the sheet. Close this, tap Refresh and check before trying again.'
+    : (r.error || 'Did not delete'), false);
+  $('sSave').disabled = false;
+  $('sDelete').disabled = false;
 });
 
 /* ---------- dashboard ---------- */
-const money = v => '$' + Number(v || 0).toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-function shortName(n){
-  const p = String(n || '').trim().split(/\s+/);
-  return p.length < 2 ? (p[0] || '') : p[0] + ' ' + p[p.length - 1][0].toUpperCase();
-}
-
-async function loadDash(){
-  document.getElementById('stats').innerHTML = '<div class="stat wide"><div class="k">Loading</div></div>';
-  const r = await call({ action: 'dashboard', fresh: !!window.__freshDash }, { timeout: 15000 }).catch(() => ({ ok: false }));
+async function loadDash() {
+  $('stats').innerHTML = '<div class="stat wide"><div class="k">Loading</div></div>';
+  const r = await call({ action: 'dashboard', fresh: FRESH.dash }, { timeout: 20000 });
   if (!r.ok) {
-    document.getElementById('stats').innerHTML = '<div class="stat wide"><div class="k">Could not load</div></div>';
+    $('stats').innerHTML = `<div class="stat wide"><div class="k">${esc(r.error || 'Could not load')}</div></div>`;
     return;
   }
+  FRESH.dash = false;
   const d = r.data;
   const net = d.profit - d.expenses;
-  document.getElementById('stats').innerHTML = `
+  $('stats').innerHTML = `
     <div class="stat"><div class="k">Orders</div><div class="v">${d.orders}</div></div>
     <div class="stat"><div class="k">Items sold</div><div class="v">${d.items}</div></div>
     <div class="stat"><div class="k">Collected</div><div class="v">${money(d.collected)}</div></div>
@@ -908,42 +1148,275 @@ async function loadDash(){
     <div class="stat"><div class="k">Expenses</div><div class="v">${money(d.expenses)}</div></div>
     <div class="stat wide"><div class="k">Net profit</div><div class="v">${money(net)}</div></div>`;
 
-  document.getElementById('recent').innerHTML = d.recent.length ? `
+  $('recent').innerHTML = d.recent.length ? `
     <table><tr><th>Date</th><th>Customer</th><th class="r">Collected</th><th class="r">Owing</th></tr>
-    ${d.recent.map(o => `<tr><td>${o.date}</td><td>${shortName(o.customer)}</td>
+    ${d.recent.map(o => `<tr class="go" data-key="${esc(o.key || '')}"><td>${esc(o.date)}</td><td>${esc(shortName(o.customer))}</td>
       <td class="r">${money(o.collected)}</td><td class="r">${money(o.owing)}</td></tr>`).join('')}
-    </table>` : '<div class="hint">No orders yet.</div>';
+    </table><div class="hint">Tap an order to open it.</div>` : '<div class="hint">No orders yet.</div>';
+  $('recent').querySelectorAll('tr.go').forEach(tr => tr.addEventListener('click', () => openByKey(tr.dataset.key)));
 
   const sellers = Object.keys(d.sellers);
-  document.getElementById('bySeller').innerHTML = sellers.length ? `
+  $('bySeller').innerHTML = sellers.length ? `
     <table><tr><th>Seller</th><th class="r">Items</th><th class="r">Collected</th><th class="r">Profit</th></tr>
-    ${sellers.map(s => `<tr><td>${s}</td><td class="r">${d.sellers[s].items}</td>
+    ${sellers.map(s => `<tr><td>${esc(s)}</td><td class="r">${d.sellers[s].items}</td>
       <td class="r">${money(d.sellers[s].collected)}</td>
       <td class="r">${money(d.sellers[s].profit)}</td></tr>`).join('')}
     </table>` : '<div class="hint">No sales yet.</div>';
 
-  document.getElementById('topProducts').innerHTML = d.top.length ? `
+  $('topProducts').innerHTML = d.top.length ? `
     <table><tr><th>Product</th><th class="r">Sold</th></tr>
-    ${d.top.map(p => `<tr><td>${p.name}</td><td class="r">${p.qty}</td></tr>`).join('')}
+    ${d.top.map(p => `<tr><td>${esc(p.name)}</td><td class="r">${p.qty}</td></tr>`).join('')}
     </table>` : '<div class="hint">Nothing sold yet.</div>';
 }
-document.getElementById('refreshDash').addEventListener('click', () => {
-  window.__freshDash = true; loadDash().then(() => window.__freshDash = false);
+$('refreshDash').addEventListener('click', () => { FRESH.dash = true; loadDash(); });
+
+async function openByKey(key) {
+  if (!key) return;
+  let o = ORDERS.find(x => x.key === key);
+  if (!o) {
+    msg('dashMsg', 'Opening...', true);
+    await loadOrders();
+    o = ORDERS.find(x => x.key === key);
+  }
+  if (o) { msgOff('dashMsg'); openOrder(o); }
+  else msg('dashMsg', 'Could not find that order. Try Refresh.', false);
+}
+
+/* ---------- contacts ---------- */
+let CONTACTS = [], EDIT_C = null;
+
+async function loadContacts() {
+  const r = await call({ action: 'contacts' }, { timeout: 20000 });
+  if (!r.ok) { $('clist').innerHTML = `<div class="hint">${esc(r.error || 'Could not load')}</div>`; return; }
+  CONTACTS = r.contacts || [];
+  drawContacts();
+}
+function drawContacts() {
+  const words = val('cSearch').trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const list = CONTACTS.filter(c => {
+    const hay = [c.name, c.phone, c.email, c.suburb, c.state, c.postcode].join(' ').toLowerCase();
+    return words.every(w => hay.includes(w));
+  });
+  $('clist').innerHTML = list.length ? list.map(c => {
+    const place = [c.suburb, c.state].filter(Boolean).join(' ');
+    const bits = [c.phone, place].filter(Boolean).join(' · ');
+    return `<div class="o" data-row="${c.row}"><div class="top"><span class="who">${esc(c.name)}</span></div>
+      <div class="line">${esc(bits || 'No details yet')}</div></div>`;
+  }).join('') : `<div class="hint">${CONTACTS.length ? 'Nothing matches.' : 'No contacts yet.'}</div>`;
+  $('clist').querySelectorAll('.o').forEach(el => el.addEventListener('click', () => {
+    const c = CONTACTS.find(x => String(x.row) === el.dataset.row);
+    if (c) editContact(c);
+  }));
+}
+$('cSearch').addEventListener('input', drawContacts);
+
+const C_FIELDS = { cName: 'name', cPhone: 'phone', cEmail: 'email', cAddress: 'address',
+                   cSuburb: 'suburb', cPostcode: 'postcode', cNotes: 'notes' };
+function editContact(c) {
+  EDIT_C = c;
+  Object.keys(C_FIELDS).forEach(id => $(id).value = c[C_FIELDS[id]] || '');
+  fillSelect($('cState'), DATA.states, c.state || '');
+  $('cTitle').textContent = 'Edit contact';
+  $('saveContact').textContent = 'Save changes';
+  $('cEditBtns').style.display = 'flex';
+  $('cEditHint').style.display = 'block';
+  $('cCard').classList.add('editing');
+  msgOff('contactMsg');
+  $('cCard').scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+function newContactMode() {
+  EDIT_C = null;
+  Object.keys(C_FIELDS).forEach(id => $(id).value = '');
+  fillSelect($('cState'), DATA.states, (DATA.states || [])[0] || '');
+  $('cTitle').textContent = 'New contact';
+  $('saveContact').textContent = 'Save contact';
+  $('cEditBtns').style.display = 'none';
+  $('cEditHint').style.display = 'none';
+  $('cCard').classList.remove('editing');
+}
+$('cCancel').addEventListener('click', () => { newContactMode(); msgOff('contactMsg'); });
+
+$('saveContact').addEventListener('click', async ev => {
+  const btn = ev.currentTarget;
+  const name = val('cName').trim();
+  if (!name) return msg('contactMsg', 'Add a name', false);
+  btn.disabled = true;
+  msg('contactMsg', 'Saving...', true);
+  const fields = {
+    name: name, phone: val('cPhone'), email: val('cEmail'), address: val('cAddress'),
+    suburb: val('cSuburb'), state: val('cState'), postcode: val('cPostcode'), notes: val('cNotes'),
+  };
+  const editing = EDIT_C;
+  const r = editing
+    ? await call(Object.assign({ action: 'updateContact', row: editing.row, original: editing.name }, fields), { retry: false, timeout: 15000 })
+    : await call(Object.assign({ action: 'addContact' }, fields), { retry: false, timeout: 15000 });
+  btn.disabled = false;
+  if (!r.ok) return msg('contactMsg', r.noReply ? 'No reply from the sheet. Check the Contacts tab before trying again.' : (r.error || 'Failed'), false);
+  if (editing) {
+    const i = DATA.customers.findIndex(c => String(c).trim().toLowerCase() === editing.name.toLowerCase());
+    if (i > -1) DATA.customers[i] = name; else DATA.customers.push(name);
+  } else {
+    DATA.customers.push(name);
+  }
+  newContactMode();
+  msg('contactMsg', editing ? 'Saved to the Contacts tab.' : 'Saved. They will show in the customer list.', true);
+  loadContacts();
 });
+
+/* ---------- expenses ---------- */
+let EXPENSES = [], EDIT_X = null;
+
+async function loadExpenses() {
+  const r = await call({ action: 'expenses' }, { timeout: 20000 });
+  if (!r.ok) { $('xlist').innerHTML = `<div class="hint">${esc(r.error || 'Could not load')}</div>`; return; }
+  EXPENSES = r.expenses || [];
+  drawExpenses();
+}
+function drawExpenses() {
+  $('xlist').innerHTML = EXPENSES.length ? EXPENSES.map(x => `
+    <div class="o" data-row="${x.row}">
+      <div class="top"><span class="who">${esc(x.description || 'No description')}</span><span class="amt">${money(x.amount)}</span></div>
+      <div class="line">${esc([fmtDate(x.date), x.category, x.paidBy].filter(Boolean).join(' · '))}</div>
+    </div>`).join('') : '<div class="hint">No expenses yet.</div>';
+  $('xlist').querySelectorAll('.o').forEach(el => el.addEventListener('click', () => {
+    const x = EXPENSES.find(e => String(e.row) === el.dataset.row);
+    if (x) editExpense(x);
+  }));
+}
+function editExpense(x) {
+  EDIT_X = x;
+  $('eDate').value = x.date || todayYMD();
+  $('eAmount').value = x.amount;
+  fillSelect($('eCat'), DATA.expenseCats, x.category || '');
+  $('eDesc').value = x.description || '';
+  fillSelect($('ePaid'), DATA.sellers, x.paidBy || '');
+  $('eNotes').value = x.notes || '';
+  $('eTitle').textContent = 'Edit expense';
+  $('saveExpense').textContent = 'Save changes';
+  $('eEditBtns').style.display = 'flex';
+  $('eCard').classList.add('editing');
+  msgOff('expenseMsg');
+  $('eCard').scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+function newExpenseMode() {
+  EDIT_X = null;
+  $('eDate').value = todayYMD();
+  ['eAmount', 'eDesc', 'eNotes'].forEach(id => $(id).value = '');
+  fillSelect($('eCat'), DATA.expenseCats, (DATA.expenseCats || [])[0] || '');
+  fillSelect($('ePaid'), DATA.sellers, (DATA.sellers || [])[0] || '');
+  $('eTitle').textContent = 'New expense';
+  $('saveExpense').textContent = 'Save expense';
+  $('eEditBtns').style.display = 'none';
+  $('eCard').classList.remove('editing');
+}
+$('eCancel').addEventListener('click', () => { newExpenseMode(); msgOff('expenseMsg'); });
+
+$('saveExpense').addEventListener('click', async ev => {
+  const btn = ev.currentTarget;
+  const amount = val('eAmount');
+  const desc = val('eDesc').trim();
+  if (!isNum(amount)) return msg('expenseMsg', 'Add an amount', false);
+  if (!desc) return msg('expenseMsg', 'Add a description', false);
+  btn.disabled = true;
+  msg('expenseMsg', 'Saving...', true);
+  const fields = {
+    date: val('eDate'), category: val('eCat'), description: desc,
+    amount: amount, paidBy: val('ePaid'), notes: val('eNotes'),
+  };
+  const editing = EDIT_X;
+  const r = editing
+    ? await call(Object.assign({ action: 'updateExpense', row: editing.row, original: editing.description }, fields), { retry: false, timeout: 15000 })
+    : await call(Object.assign({ action: 'addExpense' }, fields), { retry: false, timeout: 15000 });
+  btn.disabled = false;
+  if (!r.ok) return msg('expenseMsg', r.noReply ? 'No reply from the sheet. Check the Expenses tab before trying again.' : (r.error || 'Failed'), false);
+  FRESH.dash = true;
+  newExpenseMode();
+  msg('expenseMsg', 'Saved to the Expenses tab.', true);
+  loadExpenses();
+});
+
+$('eDelete').addEventListener('click', async () => {
+  if (!EDIT_X) return;
+  if (!confirm('Delete this expense from the Expenses tab?')) return;
+  const x = EDIT_X;
+  $('eDelete').disabled = true;
+  msg('expenseMsg', 'Deleting...', true);
+  const r = await call({ action: 'deleteExpense', row: x.row, original: x.description }, { retry: false, timeout: 15000 });
+  $('eDelete').disabled = false;
+  if (!r.ok) return msg('expenseMsg', r.noReply ? 'No reply from the sheet. Check the Expenses tab before trying again.' : (r.error || 'Failed'), false);
+  FRESH.dash = true;
+  newExpenseMode();
+  msg('expenseMsg', 'Deleted.', true);
+  loadExpenses();
+});
+
+/* ---------- tabs ---------- */
+function showPage(page) {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x.dataset.page === page));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('on', p.id === 'page-' + page));
+  if (page === 'dash') loadDash();
+  if (page === 'order') ensureLists();
+  if (page === 'orders') loadOrders();
+  if (page === 'contact') loadContacts();
+  if (page === 'expense') loadExpenses();
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => showPage(t.dataset.page)));
+
+// Picks up products added on the sheet since you logged in. Quiet, at most once a minute.
+async function ensureLists() {
+  if (Date.now() - LISTS_AT < 60000) return;
+  LISTS_AT = Date.now();
+  const r = await call({ action: 'lists' }, { timeout: 25000 });
+  if (!r.ok) return;
+  setLists(r);
+  fillSelect($('seller'), DATA.sellers);
+  document.querySelectorAll('.item').forEach(d => d.repaint && d.repaint());
+  refreshNew();
+  if (CURRENT) refreshEdit();
+}
+
+/* ---------- sign in ---------- */
+$('unlock').addEventListener('click', async () => {
+  PW = val('pw').trim();
+  if (!PW) return;
+  $('unlock').disabled = true;
+  msg('lockMsg', 'Loading your products, this takes a moment the first time...', true);
+  const r = await call({ action: 'lists' }, { timeout: 25000 });
+  $('unlock').disabled = false;
+  if (!r.ok) {
+    if (/wrong password|no admin password/i.test(r.error || '')) {
+      try { localStorage.removeItem('sp-pw'); } catch (e) {}
+    }
+    return msg('lockMsg', r.error || 'Failed', false);
+  }
+  setLists(r);
+  try { localStorage.setItem('sp-pw', PW); } catch (e) {}
+  $('lock').style.display = 'none';
+  $('app').style.display = 'block';
+  start();
+});
+
+function start() {
+  $('date').value = todayYMD();
+  fillSelect($('seller'), DATA.sellers);
+  newExpenseMode();
+  newContactMode();
+  $('items').innerHTML = '';
+  itemCard($('items'), { onChange: refreshNew });
+  refreshNew();
+  loadDash();
+}
 
 // remember the password so Face ID unlocking is enough
-try{
+try {
   const saved = localStorage.getItem('sp-pw');
-  if(saved){
-    document.getElementById('pw').value = saved;
-    setTimeout(() => document.getElementById('unlock').click(), 150);
+  if (saved) {
+    $('pw').value = saved;
+    setTimeout(() => $('unlock').click(), 150);
   }
-}catch(e){}
+} catch (e) {}
 
-// Enter goes straight to unlock
-document.getElementById('pw').addEventListener('keydown', e => {
-  if(e.key === 'Enter') document.getElementById('unlock').click();
-});
+$('pw').addEventListener('keydown', e => { if (e.key === 'Enter') $('unlock').click(); });
 </script>
 </body>
 </html>
