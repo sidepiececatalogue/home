@@ -98,6 +98,7 @@
   .item .finder{padding-right:22px}
   .one>.item .finder{padding-right:0}
   .pc{display:flex;gap:12px;align-items:flex-start;padding-right:26px}
+  .one>.item .pc{padding-right:0}
   .pc .info{flex:1;min-width:0}
   .pc .nm{font-weight:500;font-size:13.5px;overflow-wrap:anywhere;line-height:1.35}
   .pc .sub{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:2px}
@@ -352,6 +353,7 @@
   <div class="in">
     <div class="head"><h2 id="sTitle">Order</h2><button class="x" id="sClose" title="Close">✕</button></div>
     <div class="hint" id="sWhere" style="margin:2px 0 12px"></div>
+    <div class="msg" id="sTop" style="margin:0 0 12px"></div>
 
     <div class="card">
       <h2>Order</h2>
@@ -451,7 +453,7 @@ function msg(el, text, ok) {
   m.textContent = text;
   m.className = 'msg ' + (ok ? 'ok' : 'err');
 }
-function msgOff(el) { $(el).className = 'msg'; }
+function msgOff(el) { $(el).className = 'msg'; $(el).textContent = ''; }
 
 // Fills a dropdown. A value the sheet already holds is always kept, even if it is not in the list.
 function fillSelect(sel, list, keep) {
@@ -577,15 +579,15 @@ function itemCard(box, opts) {
       </div>
       <div class="results prods open"></div>
     </div>
-    <div class="chosen" style="display:none">
-      <div class="pc">
-        <div class="phw"></div>
-        <div class="info"><div class="nm"></div><div class="sub"></div><div class="each"></div></div>
-      </div>
-      <div class="qm">
-        <div><label>Qty</label><input type="number" class="qty" min="1" step="1" inputmode="numeric" value="${Math.max(1, Math.floor(n0(opts.qty)) || 1)}"></div>
-        <div class="money"><label>Markup</label><div class="mw"><span class="sign">$</span><input type="number" class="mk" step="0.01" inputmode="decimal"></div></div>
-      </div>
+    <div class="pc" style="display:none">
+      <div class="phw"></div>
+      <div class="info"><div class="nm"></div><div class="sub"></div><div class="each"></div></div>
+    </div>
+    <div class="qm">
+      <div><label>Qty</label><input type="number" class="qty" min="1" step="1" inputmode="numeric" value="${Math.max(1, Math.floor(n0(opts.qty)) || 1)}"></div>
+      <div class="money"><label>Markup</label><div class="mw"><span class="sign">$</span><input type="number" class="mk" step="0.01" inputmode="decimal" placeholder="${defMarkup()}"></div></div>
+    </div>
+    <div class="after" style="display:none">
       <div class="how"></div>
       <div class="warns"></div>
       <button type="button" class="chg">Change product</button>
@@ -593,8 +595,9 @@ function itemCard(box, opts) {
   box.appendChild(div);
 
   const q = sel => div.querySelector(sel);
-  const finder = q('.finder'), chosen = q('.chosen'), search = q('.search'), results = q('.results');
+  const finder = q('.finder'), head = q('.pc'), after = q('.after'), search = q('.search'), results = q('.results');
   const clear = q('.clear'), qty = q('.qty'), mk = q('.mk');
+  let mkTyped = false;   // a markup you typed yourself is kept when you pick or change the product
 
   const qtyNum = () => Math.max(1, Math.floor(n0(qty.value)) || 1);
   const mkNum = () => (isNum(mk.value) ? Number(mk.value) : markupOf(prodOf(name)));
@@ -668,7 +671,8 @@ function itemCard(box, opts) {
 
   const showChosen = () => {
     finder.style.display = 'none';
-    chosen.style.display = 'block';
+    head.style.display = 'flex';
+    after.style.display = 'block';
     paintHead();
     paintNums();
   };
@@ -676,7 +680,7 @@ function itemCard(box, opts) {
   const choose = p => {
     if (!p) return;
     name = p.name;
-    mk.value = markupOf(p);
+    if (!mkTyped || !isNum(mk.value)) { mk.value = markupOf(p); mkTyped = false; }
     showChosen();
     changed();
   };
@@ -724,11 +728,12 @@ function itemCard(box, opts) {
       draw();
     });
   });
-  qty.addEventListener('input', () => { paintNums(); changed(); });
-  mk.addEventListener('input', () => { paintNums(); changed(); });
+  qty.addEventListener('input', () => { if (name) paintNums(); changed(); });
+  mk.addEventListener('input', () => { mkTyped = true; if (name) paintNums(); changed(); });
   q('.chg').addEventListener('click', () => {
     name = '';
-    chosen.style.display = 'none';
+    head.style.display = 'none';
+    after.style.display = 'none';
     finder.style.display = 'block';
     search.value = '';
     clear.style.display = 'none';
@@ -981,7 +986,7 @@ function drawOrders() {
   $('olist').innerHTML = list.length ? list.map(o => {
     const n = o.items.reduce((s, i) => s + n0(i.qty), 0);
     const tag = o.owing > 0.004
-      ? `<span class="tag owed">Owing ${money(o.owing)}</span>`
+      ? (o.status ? `<span class="tag">${esc(o.status)}</span> ` : '') + `<span class="tag owed">Owing ${money(o.owing)}</span>`
       : `<span class="tag done">${esc(o.status || 'Settled')}</span>`;
     return `<div class="o" data-key="${esc(o.key)}">
       <div class="top"><span class="who">${esc(shortName(o.customer))}</span><span class="when">${esc(fmtDate(o.date))}</span></div>
@@ -1040,6 +1045,7 @@ function openOrder(o) {
   fillSelect($('sStatus'), ALL_STATUSES, o.status || '');
   $('sNotes').value = o.notes || '';
   msgOff('sMsg');
+  msgOff('sTop');
   $('sSave').disabled = false;
   $('sDelete').disabled = false;
   refreshEdit();
@@ -1081,7 +1087,7 @@ $('sSave').addEventListener('click', async () => {
   msg('sMsg', 'Saving...', true);
   if (customer.toLowerCase() !== String(order.customer || '').trim().toLowerCase()) await addContactIfNew(SCUST, customer);
   const r = await call({
-    action: 'saveOrder', key: order.key,
+    action: 'saveOrder', key: order.key, ver: order.ver,
     date: val('sDate'), seller: val('sSeller'), customer: customer,
     items: items, removed: REMOVED.slice(),
     postage: val('sPostage'), postageShared: val('sPostageShared'),
@@ -1092,6 +1098,7 @@ $('sSave').addEventListener('click', async () => {
   }, { retry: false, timeout: 20000 });
 
   FRESH.orders = FRESH.dash = true;
+  if (!r.ok && /changed in the sheet/i.test(r.error || '')) return reopenLatest(order, 'save');
   if (r.ok) {
     msg('sMsg', 'Saved to the sheet.', true);
     await sleep(700);
@@ -1113,9 +1120,10 @@ $('sDelete').addEventListener('click', async () => {
   $('sSave').disabled = true;
   $('sDelete').disabled = true;
   msg('sMsg', 'Deleting...', true);
-  const r = await call({ action: 'deleteOrder', key: order.key, rows: order.items.map(i => i.row) },
+  const r = await call({ action: 'deleteOrder', key: order.key, ver: order.ver, rows: order.items.map(i => i.row) },
     { retry: false, timeout: 20000 });
   FRESH.orders = FRESH.dash = true;
+  if (!r.ok && /changed in the sheet/i.test(r.error || '')) return reopenLatest(order, 'delete');
   if (r.ok) {
     if (CURRENT === order) closeSheet();
     loadOrders(true);
@@ -1127,6 +1135,23 @@ $('sDelete').addEventListener('click', async () => {
   $('sSave').disabled = false;
   $('sDelete').disabled = false;
 });
+
+// Someone changed this order in the sheet while it was open. Show the sheet's latest instead of writing over it.
+async function reopenLatest(order, what) {
+  msg('sMsg', 'This order was changed in the sheet. Loading the latest...', true);
+  await loadOrders(true);
+  if (CURRENT !== order) return;
+  const latest = ORDERS.find(x => x.key === order.key);
+  if (!latest) {
+    msg('sTop', 'This order is no longer in the sheet. Close this and check the Sales tab.', false);
+    msgOff('sMsg');
+    return;
+  }
+  openOrder(latest);
+  msg('sTop', what === 'delete'
+    ? 'This order was just changed in the sheet. This is the latest, check it before deleting.'
+    : 'This order was just changed in the sheet. This is the latest, make your change again.', false);
+}
 
 /* ---------- dashboard ---------- */
 async function loadDash() {
@@ -1374,6 +1399,21 @@ async function ensureLists() {
   refreshNew();
   if (CURRENT) refreshEdit();
 }
+
+// Back on this page after a while, for example from the sheet: reload what is showing
+let HIDDEN_AT = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') { HIDDEN_AT = Date.now(); return; }
+  if (!PW || $('app').style.display === 'none' || Date.now() - HIDDEN_AT < 20000) return;
+  ensureLists();
+  if (CURRENT) return;   // never reloads under an order you are editing
+  const on = document.querySelector('.tab.on');
+  const page = on ? on.dataset.page : '';
+  if (page === 'dash') loadDash();
+  if (page === 'orders') loadOrders();
+  if (page === 'contact') loadContacts();
+  if (page === 'expense') loadExpenses();
+});
 
 /* ---------- sign in ---------- */
 $('unlock').addEventListener('click', async () => {
