@@ -40,7 +40,7 @@ window.__feedText = fetch(window.__feedUrl)
 
   *{margin:0;padding:0;box-sizing:border-box}
   html{scroll-behavior:smooth}
-  #collection{scroll-margin-top:46px}
+  #collection{scroll-margin-top:92px}
   body{
     font-family:'Jost',sans-serif;
     font-weight:400;
@@ -114,6 +114,35 @@ window.__feedText = fetch(window.__feedUrl)
   }
   .pill:hover{transform:translateY(-1px)}
   .pill.active{background:var(--ink);color:var(--cream)}
+
+  /* ---------- SEARCH (small, centred, under the pills) ---------- */
+  .searchbar{display:flex;justify-content:center;padding:0 14px 9px}
+  .search-wrap{position:relative;width:100%;max-width:280px}
+  .search-ico{position:absolute;left:12px;top:50%;width:13px;height:13px;transform:translateY(-50%);
+    color:var(--ink-muted);pointer-events:none}
+  #search{
+    width:100%;padding:5px 30px 5px 32px;
+    border:1.5px solid transparent;border-radius:999px;
+    background:var(--white);color:var(--ink);
+    font-family:inherit;font-size:16px;font-weight:400;
+    box-shadow:0 2px 8px rgba(59,47,35,.05);
+    outline:none;-webkit-appearance:none;appearance:none;
+    transition:border-color .2s ease;
+  }
+  @media (min-width:641px){ #search{font-size:12px;padding:6px 30px 6px 32px} }
+  #search::placeholder{color:var(--ink-muted);letter-spacing:.08em;font-size:12.5px}
+  #search:focus{border-color:var(--ink)}
+  #search::-webkit-search-cancel-button,#search::-webkit-search-decoration{-webkit-appearance:none;display:none}
+  .search-clear{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    width:24px;height:24px;border:none;border-radius:50%;background:transparent;
+    color:var(--ink-muted);font-size:11px;cursor:pointer;display:none;
+  }
+  .search-wrap.has-text .search-clear{display:block}
+  .grid-empty{
+    grid-column:1/-1;text-align:center;padding:40px 16px;
+    font-size:12px;letter-spacing:.08em;color:var(--ink-muted);font-weight:300;
+  }
 
   /* ---------- GRID ---------- */
   .section{max-width:1280px;margin:0 auto;padding:30px 20px}
@@ -318,6 +347,8 @@ window.__feedText = fetch(window.__feedUrl)
     .hero{padding:24px 16px 26px}
     .pillbar-inner{gap:5px;padding:7px 8px}
     .pill{font-size:9.5px;padding:5px 9px;letter-spacing:.02em}
+    .searchbar{padding:0 10px 7px}
+    .search-wrap{max-width:220px}
     .section-script{font-size:8.5px}
     .section-title{font-size:11px}
     .card-desc{display:none}
@@ -454,6 +485,13 @@ window.__feedText = fetch(window.__feedUrl)
 <nav class="pillbar" aria-label="Product categories">
   <div class="pillbar-inner" id="pills">
   </div>
+  <div class="searchbar">
+    <div class="search-wrap">
+      <svg class="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input type="search" id="search" placeholder="Search" aria-label="Search products" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button type="button" class="search-clear" id="searchClear" aria-label="Clear search">✕</button>
+    </div>
+  </div>
 </nav>
 
 <!-- ============ PRODUCT GRID ============ -->
@@ -553,6 +591,7 @@ const PALETTE = [
 let PRODUCTS = [];
 let CATS = {};          /* category name -> palette entry */
 let activeCat = 'all';
+let query = '';            /* what is typed in the search bar, lower case */
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, m =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -685,7 +724,12 @@ function renderGrid(){
   grid.innerHTML = '';
   const items = PRODUCTS.filter(p => activeCat === 'all' ? true
     : activeCat === '__new__' ? /new/i.test(p.badge || '')
-    : p.category === activeCat);
+    : p.category === activeCat).filter(matchesSearch);
+
+  if(!items.length){
+    grid.innerHTML = `<div class="grid-empty">${query ? 'Nothing matches that. Try another word.' : 'Nothing here yet.'}</div>`;
+    return;
+  }
 
   items.forEach((p, i) => {
     const c = CATS[p.category];
@@ -723,6 +767,32 @@ function renderGrid(){
     grid.appendChild(card);
   });
 }
+
+/* ---------- search ---------- */
+/* Every word typed has to appear somewhere in the name, category, description, details or badge. */
+function matchesSearch(p){
+  if(!query) return true;
+  const hay = [p.name, p.category, p.description, p.details, p.badge].join(' ').toLowerCase();
+  return query.split(/\s+/).every(w => hay.includes(w));
+}
+(function(){
+  const input = document.getElementById('search');
+  const wrap = input.parentElement;
+  const clear = document.getElementById('searchClear');
+  const apply = () => {
+    const q = input.value.trim().toLowerCase();
+    wrap.classList.toggle('has-text', !!input.value);
+    if(q === query) return;
+    const wasEmpty = !query;
+    query = q;
+    if(wasEmpty && q && activeCat !== 'all'){ activeCat = 'all'; renderPills(); }   /* a search looks across everything */
+    renderGrid();
+  };
+  input.addEventListener('input', apply);
+  input.addEventListener('search', apply);
+  input.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === 'Escape') input.blur(); });
+  clear.addEventListener('click', () => { input.value = ''; apply(); input.focus(); });
+})();
 
 /* ---------- modal ---------- */
 const backdrop = document.getElementById('backdrop');
