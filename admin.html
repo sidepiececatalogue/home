@@ -151,6 +151,11 @@
     padding:3px 8px;border-radius:999px;background:var(--sand);margin-top:6px}
   .o .tag.owed{background:var(--redbg);color:var(--red)}
   .o .tag.done{background:var(--greenbg);color:var(--green)}
+  .o .tag.promo{background:#EADFF5;color:#5A3E85}
+  .card.promo-on .ps-only{display:none}
+  .promo-on .qm .money{display:none}
+  .res .pr s{color:var(--muted);font-weight:400;margin-right:5px}
+  .pc .each s{color:var(--muted);font-weight:400}
   .card.editing{box-shadow:0 0 0 2px var(--ink)}
 
   /* order editor */
@@ -218,13 +223,26 @@
         <button class="btn ghost" id="addItem">Add another item</button>
       </div>
 
-      <div class="card">
+      <div class="card" id="moneyCard">
         <h2>Money</h2>
+        <div class="field" id="promoField">
+          <label>Order type</label>
+          <div class="chips" id="promoChips">
+            <button type="button" class="chip on" data-promo="no">Normal</button>
+            <button type="button" class="chip" data-promo="yes">Promo or gifted</button>
+          </div>
+          <div id="promoWrap" style="display:none">
+            <div class="row">
+              <div class="money"><label>Supplier agreed profit</label><div class="mw"><span class="sign">$</span><input type="number" id="agreedProfit" placeholder="0" step="0.01" inputmode="decimal"></div></div>
+            </div>
+            <div class="hint">The supplier gets this instead of the usual 50/50 split. The customer pays nothing for the items, so the whole order shows as a cost to SidePiece.</div>
+          </div>
+        </div>
         <div class="row field">
           <div class="money"><label>Postage charged</label><div class="mw"><span class="sign">$</span><input type="number" id="postage" value="15" step="0.01" inputmode="decimal"></div></div>
-          <div class="money"><label>Postage to split</label><div class="mw"><span class="sign">$</span><input type="number" id="postageShared" value="10" step="0.01" inputmode="decimal"></div></div>
+          <div class="money ps-only"><label>Postage to split</label><div class="mw"><span class="sign">$</span><input type="number" id="postageShared" value="10" step="0.01" inputmode="decimal"></div></div>
         </div>
-        <div class="hint" style="margin:-6px 0 12px">Postage to split is the part shared 50/50. Anything charged above it stays yours.</div>
+        <div class="hint ps-only" style="margin:-6px 0 12px">Postage to split is the part shared 50/50. Anything charged above it stays yours.</div>
         <div class="row field">
           <div class="money"><label>Supplier shipping</label><div class="mw"><span class="sign">$</span><input type="number" id="shipping" placeholder="0" step="0.01" inputmode="decimal"></div></div>
           <div class="money"><label>Discount</label><div class="mw"><span class="sign">$</span><input type="number" id="discount" placeholder="0" step="0.01" inputmode="decimal"></div></div>
@@ -378,11 +396,24 @@
       <button class="btn ghost" id="sAddItem">Add another item</button>
     </div>
 
-    <div class="card">
+    <div class="card" id="sMoneyCard">
       <h2>Money</h2>
+      <div class="field" id="sPromoField">
+        <label>Order type</label>
+        <div class="chips" id="sPromoChips">
+          <button type="button" class="chip on" data-promo="no">Normal</button>
+          <button type="button" class="chip" data-promo="yes">Promo or gifted</button>
+        </div>
+        <div id="sPromoWrap" style="display:none">
+          <div class="row">
+            <div class="money"><label>Supplier agreed profit</label><div class="mw"><span class="sign">$</span><input type="number" id="sAgreedProfit" placeholder="0" step="0.01" inputmode="decimal"></div></div>
+          </div>
+          <div class="hint">The supplier gets this instead of the usual 50/50 split. The customer pays nothing for the items.</div>
+        </div>
+      </div>
       <div class="row field">
         <div class="money"><label>Postage charged</label><div class="mw"><span class="sign">$</span><input type="number" id="sPostage" step="0.01" placeholder="0" inputmode="decimal"></div></div>
-        <div class="money"><label>Postage to split</label><div class="mw"><span class="sign">$</span><input type="number" id="sPostageShared" step="0.01" placeholder="0" inputmode="decimal"></div></div>
+        <div class="money ps-only"><label>Postage to split</label><div class="mw"><span class="sign">$</span><input type="number" id="sPostageShared" step="0.01" placeholder="0" inputmode="decimal"></div></div>
       </div>
       <div class="row field">
         <div class="money"><label>Supplier shipping</label><div class="mw"><span class="sign">$</span><input type="number" id="sShipping" step="0.01" placeholder="0" inputmode="decimal"></div></div>
@@ -513,6 +544,9 @@ const defMarkup = () => (isNum(DATA.defaultMarkup) ? Number(DATA.defaultMarkup) 
 const markupOf = p => (p && isNum(p.markup) ? Number(p.markup) : defMarkup());
 const hasBase = p => !!p && isNum(p.base);
 const hasCost = p => !!p && isNum(p.cost);
+// a sale price on Products: the customer pays the sale price, and the difference comes off the markup
+const onSale = p => !!p && isNum(p.sale) && Number(p.sale) > 0 && (shopPrice(p) === null || Number(p.sale) < shopPrice(p));
+const saleMarkup = p => (onSale(p) && hasBase(p) ? Number(p.sale) - Number(p.base) : null);
 function shopPrice(p) {
   if (!p || p.price === undefined || p.price === null) return null;
   const s = String(p.price).replace(/[$,\s]/g, '');
@@ -630,7 +664,8 @@ function itemCard(box, opts) {
       <div class="res p" data-i="${i}">
         ${photo(p)}
         <div class="txt">${esc(p.name)}<small>${esc(p.category)}${p.hidden ? ' · Not on shop' : ''}</small></div>
-        ${hasBase(p) ? `<span class="pr">${price(Number(p.base) + markupOf(p))}</span>` : '<span class="pr no">No price</span>'}
+        ${onSale(p) ? `<span class="pr"><s>${price(shopPrice(p) !== null ? shopPrice(p) : Number(p.base) + markupOf(p))}</s>${price(p.sale)}</span>`
+          : hasBase(p) ? `<span class="pr">${price(Number(p.base) + markupOf(p))}</span>` : '<span class="pr no">No price</span>'}
       </div>`).join('')
       : '<div class="res" style="color:#97836F">Nothing matches</div>';
     results.querySelectorAll('.res[data-i]').forEach(el => {
@@ -651,9 +686,19 @@ function itemCard(box, opts) {
   const paintNums = () => {
     const p = prodOf(name), m = mkNum(), n = qtyNum();
     const each = (hasBase(p) ? Number(p.base) : 0) + m;
+    if (opts.isPromo && opts.isPromo()) {
+      // a gifted item: what matters is what it costs, not what it would sell for
+      const cost = hasCost(p) ? Number(p.cost) : 0;
+      q('.each').innerHTML = `<b>Gifted</b> · cost ${money(cost)}` + (n > 1 ? ` each, ${money(cost * n)} for ${n}` : '');
+      q('.how').textContent = hasCost(p) ? 'Cost Price from Products. No markup on a promo order.' : '';
+      q('.warns').innerHTML = !p ? '<div class="warn">This name is not on the Products tab. Pick it again or fix the name on Products.</div>'
+        : !hasCost(p) ? '<div class="warn">Cost Price is empty on Products, so this promo looks free.</div>' : '';
+      return;
+    }
     q('.each').innerHTML = `<b>${money(each)}</b> each` + (n > 1 ? ` · ${money(each * n)} for ${n}` : '');
     q('.how').textContent = hasBase(p)
-      ? `${price(p.base)} base plus ${price(m)} markup` + (m !== markupOf(p) ? `. Usual markup is ${price(markupOf(p))}.` : '')
+      ? (onSale(p) ? `On sale for ${price(p.sale)}. ` : '') +
+        `${price(p.base)} base plus ${price(m)} markup` + (m !== markupOf(p) ? `. Usual markup is ${price(markupOf(p))}.` : '')
       : '';
     const w = [];
     if (!p) {
@@ -680,7 +725,7 @@ function itemCard(box, opts) {
   const choose = p => {
     if (!p) return;
     name = p.name;
-    if (!mkTyped || !isNum(mk.value)) { mk.value = markupOf(p); mkTyped = false; }
+    if (!mkTyped || !isNum(mk.value)) { const sm = saleMarkup(p); mk.value = sm !== null ? sm : markupOf(p); mkTyped = false; }
     showChosen();
     changed();
   };
@@ -770,6 +815,16 @@ function calc(items, m) {
     r.cost += (hasCost(p) ? Number(p.cost) : 0) * it.qty;
     r.marks += mk * it.qty;
   });
+  r.promo = !!m.promo;
+  if (m.promo) {
+    // a promo or gifted order: no split, the supplier gets the agreed profit, the items are free
+    r.collected = m.postage - m.discount;
+    r.split = m.agreed;
+    r.supplier = r.cost + m.shipping + r.split;
+    r.owing = r.supplier - m.deposit - m.finalPaid;
+    r.profit = r.collected - r.supplier;
+    return r;
+  }
   r.collected = r.total - m.discount + m.postage;
   r.split = (r.total + m.postageShared - r.marks - r.cost - m.shipping) / 2;
   r.supplier = r.cost + m.shipping + r.split;
@@ -780,6 +835,17 @@ function calc(items, m) {
 function summaryHTML(r) {
   if (!r.qty) return '<div class="hint" style="margin:0">Pick a product to see the numbers.</div>';
   const line = (k, v, cls) => `<div class="l${cls ? ' ' + cls : ''}"><span>${k}</span><span>${v}</span></div>`;
+  if (r.promo) {
+    return line('Items', r.qty) +
+      line('Item cost', money(r.cost)) +
+      line('Order collected', money(r.collected), 'tot') +
+      line('Supplier agreed profit', money(r.split)) +
+      line('Supplier total', money(r.supplier)) +
+      line('Still owing', money(r.owing)) +
+      line('SidePiece profit', money(r.profit), 'tot') +
+      (r.missing ? '<div class="warn">Some prices are missing on Products, so these numbers are short.</div>' : '') +
+      '<div class="hint">Promo order. The minus figure is what it costs you. Same maths as the Sales tab.</div>';
+  }
   return line('Items', r.qty) +
     line('Items total', money(r.total)) +
     line('Order collected', money(r.collected), 'tot') +
@@ -883,12 +949,46 @@ async function addContactIfNew(picker, name) {
   if (r.ok || /already exists/i.test(r.error || '')) DATA.customers.push(name);
 }
 
+/* ---------- promo toggle, on New Order and in the editor ---------- */
+const PROMO = { new: false, edit: false };
+const PROMO_UI = {
+  new:  { chips: 'promoChips',  wrap: 'promoWrap',  card: 'moneyCard',  box: 'agreedProfit',  postage: 'postage',  shared: 'postageShared',  items: 'items',  refresh: () => refreshNew() },
+  edit: { chips: 'sPromoChips', wrap: 'sPromoWrap', card: 'sMoneyCard', box: 'sAgreedProfit', postage: 'sPostage', shared: 'sPostageShared', items: 'sItems', refresh: () => refreshEdit() },
+};
+function setPromo(which, on, quiet) {
+  const u = PROMO_UI[which];
+  PROMO[which] = !!on;
+  document.querySelectorAll('#' + u.chips + ' .chip').forEach(x => x.classList.toggle('on', (x.dataset.promo === 'yes') === !!on));
+  $(u.wrap).style.display = on ? 'block' : 'none';
+  $(u.card).classList.toggle('promo-on', !!on);
+  if (!quiet && which === 'new') {
+    // a gifted order usually charges nothing, a normal one goes back to the usual postage
+    if (on) { $(u.postage).value = ''; $(u.shared).value = ''; }
+    else if (!val(u.postage) && !val(u.shared)) { $(u.postage).value = 15; $(u.shared).value = 10; }
+  }
+  if (!on) $(u.box).value = '';
+  $(u.items).classList.toggle('promo-on', !!on);
+  cardsOf($(u.items)).forEach(d => d.repaint && d.repaint());
+  u.refresh();
+}
+['new', 'edit'].forEach(which => {
+  const u = PROMO_UI[which];
+  document.querySelectorAll('#' + u.chips + ' .chip').forEach(c => c.addEventListener('click', () => setPromo(which, c.dataset.promo === 'yes')));
+  $(u.box).addEventListener('input', u.refresh);
+});
+function showPromoChoice() {
+  const can = !!DATA.promo;
+  $('promoField').style.display = can ? 'block' : 'none';
+  $('sPromoField').style.display = can ? 'block' : 'none';
+}
+
 /* ---------- new order ---------- */
 function moneyNew() {
   return {
     postage: n0(val('postage')), postageShared: n0(val('postageShared')),
     discount: n0(val('discount')), shipping: n0(val('shipping')),
     deposit: n0(val('depositAmount')), finalPaid: 0,
+    promo: PROMO.new, agreed: n0(val('agreedProfit')),
   };
 }
 function refreshNew() { $('summary').innerHTML = summaryHTML(calc(itemsOf($('items')), moneyNew())); }
@@ -896,7 +996,7 @@ function refreshNew() { $('summary').innerHTML = summaryHTML(calc(itemsOf($('ite
   $(id).addEventListener('input', refreshNew));
 
 $('addItem').addEventListener('click', () => {
-  const d = itemCard($('items'), { onChange: refreshNew });
+  const d = itemCard($('items'), { onChange: refreshNew, isPromo: () => PROMO.new });
   refreshNew();
   d.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 });
@@ -914,13 +1014,14 @@ document.querySelectorAll('#depChips .chip').forEach(c =>
 
 function clearNewOrder() {
   $('items').innerHTML = '';
-  itemCard($('items'), { onChange: refreshNew });
+  itemCard($('items'), { onChange: refreshNew, isPromo: () => PROMO.new });
   CUST.set('');
   ['notes', 'discount', 'shipping'].forEach(id => $(id).value = '');
   $('postage').value = 15;
   $('postageShared').value = 10;
   $('status').value = 'Pending';
   setDeposit(false);
+  setPromo('new', false, true);
   refreshNew();
 }
 
@@ -930,6 +1031,7 @@ $('save').addEventListener('click', async ev => {
   const customer = val('customer').trim();
   if (!customer) return msg('saveMsg', 'Add a customer name', false);
   if (!items.length) return msg('saveMsg', 'Pick at least one product', false);
+  if (PROMO.new && !isNum(val('agreedProfit'))) return msg('saveMsg', 'Type the supplier agreed profit, or 0 if there is none', false);
 
   btn.disabled = true;
   msg('saveMsg', 'Saving...', true);
@@ -937,6 +1039,7 @@ $('save').addEventListener('click', async ev => {
     action: 'addOrder', date: val('date'), seller: val('seller'), customer: customer, items: items,
     postage: val('postage'), postageShared: val('postageShared'),
     discount: val('discount'), shipping: val('shipping'),
+    promo: PROMO.new, agreedProfit: val('agreedProfit'),
     deposit: val('depositAmount'), depositDate: val('depositAmount') ? val('depositDate') : '',
     status: val('status'), notes: val('notes'),
   };
@@ -985,9 +1088,9 @@ function drawOrders() {
   });
   $('olist').innerHTML = list.length ? list.map(o => {
     const n = o.items.reduce((s, i) => s + n0(i.qty), 0);
-    const tag = o.owing > 0.004
+    const tag = (o.promo ? '<span class="tag promo">Promo</span> ' : '') + (o.owing > 0.004
       ? (o.status ? `<span class="tag">${esc(o.status)}</span> ` : '') + `<span class="tag owed">Owing ${money(o.owing)}</span>`
-      : `<span class="tag done">${esc(o.status || 'Settled')}</span>`;
+      : `<span class="tag done">${esc(o.status || 'Settled')}</span>`);
     return `<div class="o" data-key="${esc(o.key)}">
       <div class="top"><span class="who">${esc(shortName(o.customer))}</span><span class="when">${esc(fmtDate(o.date))}</span></div>
       <div class="line">${n} item${n === 1 ? '' : 's'} · ${money(o.collected)}${o.seller ? ' · ' + esc(o.seller) : ''}</div>
@@ -1013,6 +1116,7 @@ function moneyEdit() {
     postage: n0(val('sPostage')), postageShared: n0(val('sPostageShared')),
     discount: n0(val('sDiscount')), shipping: n0(val('sShipping')),
     deposit: n0(val('sDeposit')), finalPaid: n0(val('sFinal')),
+    promo: PROMO.edit, agreed: n0(val('sAgreedProfit')),
   };
 }
 function refreshEdit() { $('sSummary').innerHTML = summaryHTML(calc(itemsOf($('sItems')), moneyEdit())); }
@@ -1032,7 +1136,7 @@ function openOrder(o) {
   $('sItems').innerHTML = '';
   o.items.forEach(it => itemCard($('sItems'), {
     row: it.row, name: it.name, category: it.category, qty: it.qty, markup: it.markup,
-    onChange: refreshEdit, onRemove: row => REMOVED.push(row),
+    onChange: refreshEdit, onRemove: row => REMOVED.push(row), isPromo: () => PROMO.edit,
   }));
   $('sPostage').value = blankZero(o.postage);
   $('sPostageShared').value = blankZero(o.postageShared);
@@ -1042,6 +1146,8 @@ function openOrder(o) {
   $('sDepositDate').value = o.depositDate || '';
   $('sFinal').value = blankZero(o.finalPaid);
   $('sFinalDate').value = o.finalDate || '';
+  setPromo('edit', !!o.promo, true);
+  $('sAgreedProfit').value = o.promo ? (isNum(o.agreedProfit) ? o.agreedProfit : '') : '';
   fillSelect($('sStatus'), ALL_STATUSES, o.status || '');
   $('sNotes').value = o.notes || '';
   msgOff('sMsg');
@@ -1065,7 +1171,7 @@ $('sheetbg').addEventListener('click', closeSheet);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && CURRENT) closeSheet(); });
 
 $('sAddItem').addEventListener('click', () => {
-  const d = itemCard($('sItems'), { onChange: refreshEdit, onRemove: row => REMOVED.push(row) });
+  const d = itemCard($('sItems'), { onChange: refreshEdit, onRemove: row => REMOVED.push(row), isPromo: () => PROMO.edit });
   refreshEdit();
   d.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 });
@@ -1080,6 +1186,7 @@ $('sSave').addEventListener('click', async () => {
   const customer = val('sCustomer').trim();
   if (!customer) return msg('sMsg', 'Add a customer name', false);
   if (!items.length) return msg('sMsg', 'Pick at least one product. To remove the whole order, use Delete.', false);
+  if (PROMO.edit && !isNum(val('sAgreedProfit'))) return msg('sMsg', 'Type the supplier agreed profit, or 0 if there is none', false);
 
   const order = CURRENT;
   $('sSave').disabled = true;
@@ -1092,6 +1199,7 @@ $('sSave').addEventListener('click', async () => {
     items: items, removed: REMOVED.slice(),
     postage: val('sPostage'), postageShared: val('sPostageShared'),
     shipping: val('sShipping'), discount: val('sDiscount'),
+    promo: PROMO.edit, agreedProfit: val('sAgreedProfit'),
     deposit: val('sDeposit'), depositDate: val('sDepositDate'),
     finalPaid: val('sFinal'), finalDate: val('sFinalDate'),
     status: val('sStatus'), notes: val('sNotes'),
@@ -1170,12 +1278,14 @@ async function loadDash() {
     <div class="stat"><div class="k">Collected</div><div class="v">${money(d.collected)}</div></div>
     <div class="stat"><div class="k">Paid to supplier</div><div class="v">${money(d.paid)}</div></div>
     <div class="stat"><div class="k">Still owing</div><div class="v">${money(d.owing)}</div></div>
+    <div class="stat"><div class="k">Discounts</div><div class="v">${money(d.discounts)}</div></div>
     <div class="stat"><div class="k">Expenses</div><div class="v">${money(d.expenses)}</div></div>
+    <div class="stat"><div class="k">Promo spend${d.promoOrders ? ' · ' + d.promoOrders : ''}</div><div class="v">${money(d.promoSpend)}</div></div>
     <div class="stat wide"><div class="k">Net profit</div><div class="v">${money(net)}</div></div>`;
 
   $('recent').innerHTML = d.recent.length ? `
     <table><tr><th>Date</th><th>Customer</th><th class="r">Collected</th><th class="r">Owing</th></tr>
-    ${d.recent.map(o => `<tr class="go" data-key="${esc(o.key || '')}"><td>${esc(o.date)}</td><td>${esc(shortName(o.customer))}</td>
+    ${d.recent.map(o => `<tr class="go" data-key="${esc(o.key || '')}"><td>${esc(o.date)}</td><td>${esc(shortName(o.customer))}${o.promo ? ' <span class="tag promo" style="margin:0">Promo</span>' : ''}</td>
       <td class="r">${money(o.collected)}</td><td class="r">${money(o.owing)}</td></tr>`).join('')}
     </table><div class="hint">Tap an order to open it.</div>` : '<div class="hint">No orders yet.</div>';
   $('recent').querySelectorAll('tr.go').forEach(tr => tr.addEventListener('click', () => openByKey(tr.dataset.key)));
@@ -1395,6 +1505,7 @@ async function ensureLists() {
   if (!r.ok) return;
   setLists(r);
   fillSelect($('seller'), DATA.sellers);
+  showPromoChoice();
   document.querySelectorAll('.item').forEach(d => d.repaint && d.repaint());
   refreshNew();
   if (CURRENT) refreshEdit();
@@ -1439,10 +1550,11 @@ $('unlock').addEventListener('click', async () => {
 function start() {
   $('date').value = todayYMD();
   fillSelect($('seller'), DATA.sellers);
+  showPromoChoice();
   newExpenseMode();
   newContactMode();
   $('items').innerHTML = '';
-  itemCard($('items'), { onChange: refreshNew });
+  itemCard($('items'), { onChange: refreshNew, isPromo: () => PROMO.new });
   refreshNew();
   loadDash();
 }
