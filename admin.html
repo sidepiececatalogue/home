@@ -706,6 +706,7 @@ function itemCard(box, opts) {
     } else {
       if (!hasBase(p)) w.push('Base Price is empty on Products, so the sheet only charges the markup.');
       if (!hasCost(p)) w.push('Cost Price is empty on Products, so the profit will look too high.');
+      if (onSale(p) && hasBase(p) && Number(p.sale) < Number(p.base)) w.push(`The sale price ${price(p.sale)} is under the Base Price ${price(p.base)}, so you lose money on each one.`);
       const shop = shopPrice(p);
       if (shop !== null && hasBase(p) && Math.abs(shop - (Number(p.base) + markupOf(p))) > 0.004) {
         w.push(`The shop shows ${price(shop)} but Base Price plus Markup is ${price(Number(p.base) + markupOf(p))}. Fix one of them on Products.`);
@@ -809,7 +810,7 @@ function calc(items, m) {
   items.forEach(it => {
     const p = prodOf(it.name);
     const mk = isNum(it.markup) ? Number(it.markup) : markupOf(p);
-    if (!hasBase(p) || !hasCost(p)) r.missing = true;
+    if (!hasCost(p) || (!m.promo && !hasBase(p))) r.missing = true;   // a promo only needs the cost
     r.qty += it.qty;
     r.total += ((hasBase(p) ? Number(p.base) : 0) + mk) * it.qty;
     r.cost += (hasCost(p) ? Number(p.cost) : 0) * it.qty;
